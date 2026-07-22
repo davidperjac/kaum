@@ -478,6 +478,7 @@ struct AlarmPermissionScreen: View {
 // MARK: - Screen 13: summary
 
 struct SummaryScreen: View {
+    var name: String = ""
     let time: Date
     let days: Set<Int>
     let source: VerseSource
@@ -489,8 +490,9 @@ struct SummaryScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: KoumSpacing.xxl)
 
-            Text("Here's your morning.")
+            Text(name.isEmpty ? "Here's your morning." : "\(name), here's\nyour morning.")
                 .font(KoumType.display)
+                .koumLineSpacing(6)
                 .foregroundStyle(KoumColor.bone)
                 .padding(.bottom, KoumSpacing.xl)
 
@@ -527,14 +529,20 @@ struct SummaryScreen: View {
 
             if !motivation.isEmpty {
                 Text("You said you wanted to feel \(motivation).\nThis is how that starts.")
-                    .font(KoumType.body)
-                    .koumLineSpacing(4)
+                    .font(KoumType.devotionalItalic)
+                    .koumLineSpacing(6)
                     .foregroundStyle(KoumColor.boneMuted)
             }
 
             Spacer()
 
-            Button("Continue", action: onContinue)
+            Text("Tomorrow at \(time.formatted(date: .omitted, time: .shortened)) — one promise, kept.")
+                .font(KoumType.caption)
+                .foregroundStyle(KoumColor.boneFaint)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, KoumSpacing.sm)
+
+            Button("I'll be there", action: onContinue)
                 .buttonStyle(.koumPrimary)
                 .padding(.bottom, KoumSpacing.lg)
         }

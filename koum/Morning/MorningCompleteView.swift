@@ -4,6 +4,7 @@ import SwiftUI
 /// Morning complete: streak +1, then get out of the way.
 struct MorningCompleteView: View {
     @Bindable var session: MorningSession
+    @Environment(AppModel.self) private var app
     @Environment(\.modelContext) private var modelContext
 
     @State private var displayedStreak = 0
@@ -64,9 +65,11 @@ struct MorningCompleteView: View {
                     Image(systemName: "checkmark")
                         .font(.system(size: 22, weight: .medium))
                         .foregroundStyle(KoumColor.verified)
-                    Text("Good morning")
+                    Text(app.userName.isEmpty ? "Good morning" : "Good morning, \(app.userName)")
                         .font(KoumType.display)
                         .foregroundStyle(KoumColor.bone)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 Text("You read \(session.verse.display)")
                     .font(KoumType.body)

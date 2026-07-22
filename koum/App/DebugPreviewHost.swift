@@ -81,6 +81,42 @@ struct DebugPreviewHost: View {
             SettingsView()
                 .environment(\.koumTheme, KoumTheme(isDark: true))
                 .preferredColorScheme(.dark)
+        case "name":
+            ZStack { KoumColor.night.ignoresSafeArea()
+                NameScreen(name: .constant("")) {} }
+                .preferredColorScheme(.dark)
+        case "ack":
+            ZStack { KoumColor.night.ignoresSafeArea()
+                AcknowledgementScreen(
+                    lines: OnboardingVoice.frequencyAck("I keep meaning to", name: "David").lines,
+                    button: OnboardingVoice.frequencyAck("I keep meaning to", name: "David").button
+                ) {} }
+                .preferredColorScheme(.dark)
+        case "versewhy":
+            ZStack { KoumColor.night.ignoresSafeArea()
+                VerseInterstitial(
+                    eyebrow: "Before the crowds found Him, this was His habit.",
+                    reference: "Mark 1:35",
+                    text: "Early in the morning, while it was still dark, he rose up and went out, and departed into a deserted place, and prayed there.",
+                    closing: "The quiet came first. Everything else came out of it.",
+                    button: "Continue"
+                ) {} }
+                .preferredColorScheme(.dark)
+        case "building":
+            ZStack { KoumColor.night.ignoresSafeArea()
+                BuildingScreen(name: "David") {} }
+                .preferredColorScheme(.dark)
+        case "summary":
+            ZStack { KoumColor.night.ignoresSafeArea()
+                SummaryScreen(
+                    name: "David",
+                    time: Date(),
+                    days: [2, 3, 4, 5, 6],
+                    source: .koumPlan,
+                    mode: .scan,
+                    motivation: "more grounded"
+                ) {} }
+                .preferredColorScheme(.dark)
         default:
             OnboardingFlow()
         }

@@ -43,6 +43,12 @@ final class AppModel {
         set { UserDefaults.standard.set(newValue, forKey: "onboardingMotivation") }
     }
 
+    /// First name, given during onboarding. Local only — no account.
+    var userName: String {
+        get { UserDefaults.standard.string(forKey: "userName") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "userName") }
+    }
+
     // MARK: - Session
 
     var morningSession: MorningSession?

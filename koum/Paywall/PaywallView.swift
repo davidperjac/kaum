@@ -81,8 +81,11 @@ struct PaywallView: View {
 
     private var headline: some View {
         VStack(alignment: .leading, spacing: KoumSpacing.sm) {
-            Text("Start tomorrow morning.")
+            Text(app.userName.isEmpty
+                 ? "Start tomorrow morning."
+                 : "\(app.userName), start\ntomorrow morning.")
                 .font(KoumType.display)
+                .koumLineSpacing(6)
                 .foregroundStyle(KoumColor.bone)
             if !app.onboardingMotivation.isEmpty {
                 Text("You said you wanted to feel \(app.onboardingMotivation.lowercased()). This is how that starts.")
@@ -207,9 +210,20 @@ struct PaywallView: View {
             .buttonStyle(.koumPrimary)
             .disabled(purchasing)
 
-            Text(selectedYearly ? "No charge for 7 days. Cancel anytime." : "Cancel anytime.")
-                .font(KoumType.caption)
-                .foregroundStyle(KoumColor.boneMuted)
+            if selectedYearly {
+                HStack(spacing: KoumSpacing.xs) {
+                    trialStep("Today", "full access")
+                    trialDot
+                    trialStep("Day 5", "we remind you")
+                    trialDot
+                    trialStep("Day 7", "trial ends")
+                }
+                .frame(maxWidth: .infinity)
+            } else {
+                Text("Cancel anytime.")
+                    .font(KoumType.caption)
+                    .foregroundStyle(KoumColor.boneMuted)
+            }
 
             Text("Your prayers and journal stay on your phone.")
                 .font(KoumType.micro)
@@ -236,6 +250,24 @@ struct PaywallView: View {
         }
         .padding(.horizontal, KoumSpacing.margin)
         .padding(.bottom, KoumSpacing.sm)
+    }
+
+    private func trialStep(_ day: String, _ detail: String) -> some View {
+        VStack(spacing: 1) {
+            Text(day)
+                .font(KoumType.caption)
+                .foregroundStyle(KoumColor.bone)
+            Text(detail)
+                .font(KoumType.micro)
+                .foregroundStyle(KoumColor.boneFaint)
+        }
+    }
+
+    private var trialDot: some View {
+        Circle()
+            .fill(KoumColor.nightEdge)
+            .frame(width: 3, height: 3)
+            .padding(.horizontal, KoumSpacing.xs)
     }
 
     private func purchase() {
