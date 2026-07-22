@@ -101,9 +101,7 @@ struct DevotionalView: View {
                         .font(KoumType.label)
                         .foregroundStyle(KoumColor.bone)
                     Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12))
-                        .foregroundStyle(KoumColor.boneFaint)
+                    GlyphView(glyph: .chevronDown, size: 12, color: KoumColor.boneFaint)
                         .rotationEffect(.degrees(expanded ? 180 : 0))
                 }
             }

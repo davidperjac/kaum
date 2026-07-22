@@ -45,9 +45,7 @@ struct MorningCompleteView: View {
 
     private var demoContent: some View {
         VStack(spacing: KoumSpacing.md) {
-            Image(systemName: "checkmark")
-                .font(.system(size: 30, weight: .medium))
-                .foregroundStyle(KoumColor.verified)
+            GlyphView(glyph: .check, size: 30, color: KoumColor.verified, lineWidth: 2.5)
                 .padding(.bottom, KoumSpacing.sm)
             Text("That's it.")
                 .font(KoumType.display)
@@ -62,9 +60,7 @@ struct MorningCompleteView: View {
         VStack(spacing: KoumSpacing.xl) {
             VStack(spacing: KoumSpacing.sm) {
                 HStack(spacing: KoumSpacing.md) {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(KoumColor.verified)
+                    GlyphView(glyph: .check, size: 20, color: KoumColor.verified, lineWidth: 2)
                     Text(app.userName.isEmpty ? "Good morning" : "Good morning, \(app.userName)")
                         .font(KoumType.display)
                         .foregroundStyle(KoumColor.bone)

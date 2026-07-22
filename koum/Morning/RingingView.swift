@@ -64,7 +64,11 @@ struct RingingView: View {
                 Spacer(minLength: KoumSpacing.lg)
             }
         }
-        .onAppear { session.startRinging() }
+        .onAppear {
+            session.startRinging()
+            KoumHapticEngine.shared.startAlarmPulse()
+        }
+        .onDisappear { KoumHapticEngine.shared.stopAlarmPulse() }
         .onReceive(timer) { now = $0 }
     }
 
@@ -74,17 +78,13 @@ struct RingingView: View {
             session.beginVerification(mode: mode)
         } label: {
             HStack(spacing: KoumSpacing.md) {
-                Image(systemName: mode.symbolName)
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(KoumColor.firstlight)
+                GlyphView(glyph: mode.glyph, size: 22)
                     .frame(width: 28)
                 Text(mode.title)
                     .font(KoumType.label)
                     .foregroundStyle(KoumColor.bone)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(KoumColor.boneFaint)
+                GlyphView(glyph: .chevronRight, size: 12, color: KoumColor.boneFaint)
             }
             .padding(.horizontal, KoumSpacing.md + KoumSpacing.xs)
             .frame(height: 56)

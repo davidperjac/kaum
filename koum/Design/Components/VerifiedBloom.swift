@@ -53,6 +53,7 @@ struct VerifiedBloom: View {
         // 200ms of nothing — the silence is the reward
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             withAnimation(.easeOut(duration: 0.6)) { glow = 1 }
+            KoumHapticEngine.shared.playBloomSwell()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
             withAnimation(.easeInOut(duration: 0.4)) { checkProgress = 1 }

@@ -54,6 +54,14 @@ nonisolated enum VerifyMode: String, Codable, CaseIterable, Sendable {
         case .type: "keyboard"
         }
     }
+
+    var glyph: KoumGlyph {
+        switch self {
+        case .scan: .camera
+        case .speak: .mic
+        case .type: .keyboard
+        }
+    }
 }
 
 /// Where a given alarm draws its verses from.

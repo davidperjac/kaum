@@ -109,9 +109,7 @@ struct PaywallView: View {
 
     private func featureRow(_ text: String) -> some View {
         HStack(spacing: KoumSpacing.md) {
-            Image(systemName: "checkmark")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(KoumColor.verified)
+            GlyphView(glyph: .check, size: 13, color: KoumColor.verified)
             Text(text)
                 .font(KoumType.body)
                 .foregroundStyle(KoumColor.bone)

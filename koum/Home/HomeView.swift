@@ -98,10 +98,16 @@ struct HomeView: View {
             if let next = app.nextAlarmDate(context: modelContext) {
                 MicroLabel(text: nextAlarmLabel(next.date))
                     .padding(.bottom, KoumSpacing.xs)
-                Text(next.date.formatted(date: .omitted, time: .shortened))
-                    .font(KoumType.clock)
-                    .foregroundStyle(theme.text)
-                    .padding(.bottom, KoumSpacing.xl)
+                VStack(spacing: KoumSpacing.xs) {
+                    Text(clockString(next.date))
+                        .font(KoumType.clock)
+                        .foregroundStyle(theme.text)
+                        .monospacedDigit()
+                    if let m = meridiemString(next.date) {
+                        MicroLabel(text: m, color: theme.textFaint)
+                    }
+                }
+                .padding(.bottom, KoumSpacing.xl)
 
                 if let day = app.verseForDate(next.date, source: next.alarm.verseSource) {
                     VerseBlock(
@@ -125,9 +131,12 @@ struct HomeView: View {
                 .foregroundStyle(theme.textMuted)
                 .padding(.bottom, KoumSpacing.xl)
 
-                Label("Alarm is set", systemImage: "checkmark")
-                    .font(KoumType.label)
-                    .foregroundStyle(theme.success)
+                HStack(spacing: KoumSpacing.sm) {
+                    GlyphView(glyph: .check, size: 14, color: theme.success)
+                    Text("Alarm is set")
+                }
+                .font(KoumType.label)
+                .foregroundStyle(theme.success)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(
@@ -135,11 +144,7 @@ struct HomeView: View {
                             .stroke(theme.edge, lineWidth: 1)
                     )
             } else {
-                Image("WrenSleeping")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 80)
-                    .accessibilityHidden(true)
+                BreathingWren(imageName: "WrenSleeping", height: 80)
                     .padding(.bottom, KoumSpacing.lg)
                 Text("No alarm set")
                     .font(KoumType.display)
@@ -221,10 +226,13 @@ struct HomeView: View {
         VStack(spacing: 0) {
             Spacer(minLength: KoumSpacing.xxl)
 
-            Label("Good morning", systemImage: "checkmark")
-                .font(KoumType.display)
-                .foregroundStyle(theme.text)
-                .padding(.bottom, KoumSpacing.xl)
+            HStack(spacing: KoumSpacing.md) {
+                GlyphView(glyph: .check, size: 20, color: theme.success, lineWidth: 2)
+                Text("Good morning")
+            }
+            .font(KoumType.display)
+            .foregroundStyle(theme.text)
+            .padding(.bottom, KoumSpacing.xl)
 
             VStack(alignment: .leading, spacing: KoumSpacing.sm) {
                 Text("You read \(entry.verseRef.display)")
@@ -290,10 +298,53 @@ struct HomeView: View {
         }
     }
 
+    private func clockString(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.setLocalizedDateFormatFromTemplate("jmm")
+        formatter.dateFormat = formatter.dateFormat
+            .replacingOccurrences(of: "a", with: "")
+            .trimmingCharacters(in: .whitespaces)
+        return formatter.string(from: date)
+    }
+
+    private func meridiemString(_ date: Date) -> String? {
+        let formatter = DateFormatter()
+        formatter.setLocalizedDateFormatFromTemplate("jmm")
+        guard formatter.dateFormat.contains("a") else { return nil }
+        formatter.dateFormat = "a"
+        return formatter.string(from: date)
+    }
+
     private func nextAlarmLabel(_ date: Date) -> String {
         let cal = Calendar.current
         if cal.isDateInToday(date) { return "Today" }
         if cal.isDateInTomorrow(date) { return "Tomorrow" }
         return date.formatted(.dateTime.weekday(.wide))
+    }
+}
+
+
+/// A Wren that breathes — a barely-perceptible 5-second swell, the only
+/// living thing on an idle screen. Static under Reduced Motion.
+struct BreathingWren: View {
+    let imageName: String
+    let height: CGFloat
+
+    @State private var breath = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Image(imageName)
+            .resizable()
+            .scaledToFit()
+            .frame(height: height)
+            .scaleEffect(x: breath ? 1.012 : 1.0, y: breath ? 1.025 : 1.0, anchor: .bottom)
+            .accessibilityHidden(true)
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(.easeInOut(duration: 5).repeatForever(autoreverses: true)) {
+                    breath = true
+                }
+            }
     }
 }

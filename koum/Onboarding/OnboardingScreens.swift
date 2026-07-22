@@ -215,9 +215,7 @@ struct ModeChoiceScreen: View {
                         }
                     } label: {
                         HStack(spacing: KoumSpacing.md) {
-                            Image(systemName: mode.symbolName)
-                                .font(.system(size: 20))
-                                .foregroundStyle(KoumColor.firstlight)
+                            GlyphView(glyph: mode.glyph, size: 24)
                                 .frame(width: 30)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(mode.title)

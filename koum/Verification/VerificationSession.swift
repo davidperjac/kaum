@@ -149,7 +149,7 @@ final class VerificationSession {
     private func pass(escapeHatch: Bool) {
         guard case .working = stage else { return }
         stage = .passed(usedEscapeHatch: escapeHatch)
-        KoumHaptics.verificationPassed()
+        // The bloom plays the composed swell; no generator haptic here.
         onPassed?(escapeHatch)
     }
 }
