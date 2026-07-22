@@ -54,13 +54,13 @@ struct VerifiedBloom: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             withAnimation(.easeOut(duration: 0.6)) { glow = 1 }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
             withAnimation(.easeInOut(duration: 0.4)) { checkProgress = 1 }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.05) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
             withAnimation(.easeOut(duration: 0.5)) { settled = true }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.95) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.3) {
             onFinished()
         }
     }

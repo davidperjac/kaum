@@ -588,6 +588,13 @@ struct ConfirmationScreen: View {
 
             Spacer()
 
+            Text("KOUM")
+                .font(KoumType.wordmark)
+                .kerning(3)
+                .foregroundStyle(KoumColor.boneFaint)
+                .padding(.bottom, KoumSpacing.md)
+                .accessibilityHidden(true)
+
             Button("Done", action: onDone)
                 .buttonStyle(.koumPrimary)
                 .padding(.bottom, KoumSpacing.lg)

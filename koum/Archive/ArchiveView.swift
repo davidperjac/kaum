@@ -112,8 +112,9 @@ struct ArchiveView: View {
 
             let columns = Array(repeating: GridItem(.flexible()), count: 7)
             LazyVGrid(columns: columns, spacing: KoumSpacing.sm) {
-                ForEach(Calendar.current.veryShortWeekdaySymbols, id: \.self) { symbol in
-                    Text(symbol)
+                let symbols = Calendar.current.veryShortWeekdaySymbols
+                ForEach(symbols.indices, id: \.self) { idx in
+                    Text(symbols[idx])
                         .font(KoumType.micro)
                         .foregroundStyle(theme.textFaint)
                 }

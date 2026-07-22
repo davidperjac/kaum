@@ -50,13 +50,20 @@ struct DevotionalView: View {
                         paragraph("Read it once more, slowly. Which word is for you today?")
                     }
 
-                    Spacer(minLength: KoumSpacing.xl)
+                    Spacer(minLength: 120)
                 }
                 .padding(.horizontal, KoumSpacing.margin)
             }
 
-            VStack {
+            VStack(spacing: 0) {
                 Spacer()
+                LinearGradient(
+                    colors: [KoumColor.night.opacity(0), KoumColor.night.opacity(0.92), KoumColor.night],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .frame(height: 72)
+                .allowsHitTesting(false)
+                .ignoresSafeArea(edges: .horizontal)
                 Button("Continue") {
                     KoumHaptics.buttonPress()
                     session.advanceFromDevotional()
@@ -64,16 +71,9 @@ struct DevotionalView: View {
                 .buttonStyle(.koumPrimary)
                 .padding(.horizontal, KoumSpacing.margin)
                 .padding(.bottom, KoumSpacing.sm)
-                .background(
-                    LinearGradient(
-                        colors: [KoumColor.night.opacity(0), KoumColor.night],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                    .frame(height: 120)
-                    .allowsHitTesting(false),
-                    alignment: .bottom
-                )
+                .background(KoumColor.night)
             }
+            .ignoresSafeArea(edges: .bottom)
         }
     }
 
@@ -118,5 +118,8 @@ struct DevotionalView: View {
             }
         }
         .padding(.vertical, KoumSpacing.sm)
+        .overlay(alignment: .top) {
+            Divider().overlay(KoumColor.nightEdge.opacity(0.6))
+        }
     }
 }

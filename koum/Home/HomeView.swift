@@ -169,6 +169,12 @@ struct HomeView: View {
     private var incompleteState: some View {
         VStack(spacing: 0) {
             Spacer(minLength: KoumSpacing.xxl)
+            Image("WrenWaiting")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 84)
+                .accessibilityHidden(true)
+                .padding(.bottom, KoumSpacing.lg)
             Text("Your verse is waiting")
                 .font(KoumType.display)
                 .foregroundStyle(theme.text)

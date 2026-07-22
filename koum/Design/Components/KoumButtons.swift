@@ -59,6 +59,24 @@ struct KoumGhostButtonStyle: ButtonStyle {
     }
 }
 
+/// Raised-card row (mode select, options). Gentle press: scale + brighten.
+struct KoumRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(KoumColor.nightRaised)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(KoumColor.nightEdge.opacity(0.6), lineWidth: 1)
+                    )
+                    .brightness(configuration.isPressed ? 0.04 : 0)
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(KoumMotion.instantEase, value: configuration.isPressed)
+    }
+}
+
 extension ButtonStyle where Self == KoumPrimaryButtonStyle {
     static var koumPrimary: KoumPrimaryButtonStyle { KoumPrimaryButtonStyle() }
 }

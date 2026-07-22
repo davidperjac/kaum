@@ -19,17 +19,22 @@ struct RingingView: View {
             VStack(spacing: 0) {
                 Spacer(minLength: KoumSpacing.xl)
 
-                Text(now.formatted(date: .omitted, time: .shortened))
-                    .font(KoumType.clock)
-                    .foregroundStyle(KoumColor.bone)
-                    .monospacedDigit()
+                VStack(spacing: KoumSpacing.xs) {
+                    Text(clockString)
+                        .font(KoumType.clock)
+                        .foregroundStyle(KoumColor.bone)
+                        .monospacedDigit()
+                    if let meridiem {
+                        MicroLabel(text: meridiem, color: KoumColor.boneFaint)
+                    }
+                }
 
                 Spacer(minLength: KoumSpacing.xxl)
 
                 VerseBlock(
                     reference: session.verse.display,
                     text: session.verseText,
-                    hero: true,
+                    hero: session.verseText.count <= 150,
                     referenceColor: KoumColor.firstlight
                 )
                 .padding(.horizontal, KoumSpacing.margin)
@@ -77,15 +82,32 @@ struct RingingView: View {
                     .font(KoumType.label)
                     .foregroundStyle(KoumColor.bone)
                 Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(KoumColor.boneFaint)
             }
             .padding(.horizontal, KoumSpacing.md + KoumSpacing.xs)
             .frame(height: 56)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(KoumColor.nightRaised)
-            )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(KoumRowButtonStyle())
         .accessibilityLabel("\(mode.title). \(mode.subtitle)")
+    }
+
+    private var clockString: String {
+        let formatter = DateFormatter()
+        formatter.setLocalizedDateFormatFromTemplate("jmm")
+        // Strip the meridiem; it renders separately, quietly.
+        formatter.dateFormat = formatter.dateFormat
+            .replacingOccurrences(of: "a", with: "")
+            .trimmingCharacters(in: .whitespaces)
+        return formatter.string(from: now)
+    }
+
+    private var meridiem: String? {
+        let formatter = DateFormatter()
+        formatter.setLocalizedDateFormatFromTemplate("jmm")
+        guard formatter.dateFormat.contains("a") else { return nil }
+        formatter.dateFormat = "a"
+        return formatter.string(from: now)
     }
 }

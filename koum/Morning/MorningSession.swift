@@ -179,4 +179,15 @@ final class MorningSession {
     func finish() {
         onFinished?()
     }
+
+    #if DEBUG
+    /// Design-QA harness support: jump straight to a step.
+    func debugJump(to step: Step) {
+        if case .verifying = step {
+            beginVerification()
+        } else {
+            self.step = step
+        }
+    }
+    #endif
 }

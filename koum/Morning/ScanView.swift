@@ -68,16 +68,13 @@ struct ScanView: View {
                         }
                         .buttonStyle(.koumGhost)
                     }
+                    Text("The page is read on your phone and never uploaded.")
+                        .font(KoumType.micro)
+                        .foregroundStyle(KoumColor.boneFaint)
                 }
                 .padding(.horizontal, KoumSpacing.margin)
-                .padding(.bottom, KoumSpacing.lg)
+                .padding(.bottom, KoumSpacing.md)
             }
-
-            Text("The page is read on your phone and never uploaded.")
-                .font(KoumType.micro)
-                .foregroundStyle(KoumColor.boneFaint)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-                .padding(.bottom, 4)
         }
         .task {
             scanner.onRecognizedText = { text in

@@ -17,9 +17,8 @@ struct JournalView: View {
             KoumColor.night.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer(minLength: KoumSpacing.xl)
-
                 MicroLabel(text: "Journal", color: KoumColor.firstlight)
+                    .padding(.top, KoumSpacing.xxl)
                     .padding(.bottom, KoumSpacing.md)
 
                 Text(prompt)
@@ -34,7 +33,7 @@ struct JournalView: View {
                     .foregroundStyle(KoumColor.bone)
                     .tint(KoumColor.firstlight)
                     .focused($focused)
-                    .lineLimit(4...10)
+                    .lineLimit(3...8)
 
                 Spacer()
 

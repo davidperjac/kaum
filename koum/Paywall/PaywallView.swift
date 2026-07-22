@@ -169,19 +169,18 @@ struct PaywallView: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: KoumSpacing.xs) {
-                    HStack(spacing: KoumSpacing.sm) {
-                        Text(title)
-                            .font(KoumType.label)
-                            .foregroundStyle(KoumColor.bone)
-                        if let badge {
-                            MicroLabel(text: badge, color: KoumColor.firstlight)
-                        }
-                    }
+                    Text(title)
+                        .font(KoumType.label)
+                        .foregroundStyle(KoumColor.bone)
                     Text(detail)
                         .font(KoumType.caption)
                         .foregroundStyle(KoumColor.boneMuted)
                 }
                 Spacer()
+                if let badge {
+                    MicroLabel(text: badge, color: KoumColor.firstlight)
+                        .padding(.trailing, KoumSpacing.sm)
+                }
                 Image(systemName: selected ? "circle.inset.filled" : "circle")
                     .foregroundStyle(selected ? KoumColor.firstlight : KoumColor.boneFaint)
             }

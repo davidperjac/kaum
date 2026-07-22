@@ -17,9 +17,8 @@ struct PrayerView: View {
             KoumColor.night.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer(minLength: KoumSpacing.xl)
-
                 MicroLabel(text: "Pray", color: KoumColor.firstlight)
+                    .padding(.top, KoumSpacing.xxl)
                     .padding(.bottom, KoumSpacing.md)
 
                 Text(prompt)
@@ -29,19 +28,21 @@ struct PrayerView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.bottom, KoumSpacing.xl)
 
-                // Journal-style input: no visible field, just a cursor.
-                TextField("", text: $text, axis: .vertical)
-                    .font(KoumType.devotional)
-                    .foregroundStyle(KoumColor.bone)
-                    .tint(KoumColor.firstlight)
-                    .focused($focused)
-                    .lineLimit(6...12)
-
-                if text.isEmpty {
-                    Text("Write it, or just pray it — both count.")
-                        .font(KoumType.caption)
-                        .foregroundStyle(KoumColor.boneFaint)
-                        .padding(.top, KoumSpacing.sm)
+                // Journal-style input: no visible field, just a cursor and a
+                // quiet placeholder where writing begins.
+                ZStack(alignment: .topLeading) {
+                    if text.isEmpty {
+                        Text("Write it, or just pray it. Both count.")
+                            .font(KoumType.devotional)
+                            .foregroundStyle(KoumColor.boneFaint)
+                            .allowsHitTesting(false)
+                    }
+                    TextField("", text: $text, axis: .vertical)
+                        .font(KoumType.devotional)
+                        .foregroundStyle(KoumColor.bone)
+                        .tint(KoumColor.firstlight)
+                        .focused($focused)
+                        .lineLimit(4...10)
                 }
 
                 Spacer()
@@ -52,7 +53,7 @@ struct PrayerView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.bottom, KoumSpacing.sm)
 
-                Button(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Amen" : "Amen") {
+                Button("Amen") {
                     KoumHaptics.buttonPress()
                     session.savePrayer(text)
                 }

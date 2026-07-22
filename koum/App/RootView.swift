@@ -27,23 +27,51 @@ struct RootView: View {
     }
 
     var body: some View {
-        Group {
+        #if DEBUG
+        if let preview = DebugPreviewHost.requested {
+            DebugPreviewHost(name: preview)
+        } else {
+            mainBody
+        }
+        #else
+        mainBody
+        #endif
+    }
+
+    private enum Route: Equatable {
+        case morning, onboarding, gate, home
+    }
+
+    private var route: Route {
+        if app.morningSession != nil { return .morning }
+        if !app.hasCompletedOnboarding { return .onboarding }
+        if !subscriptions.isSubscribed && subscriptions.isConfigured { return .gate }
+        return .home
+    }
+
+    private var mainBody: some View {
+        ZStack {
             if let session = app.morningSession {
                 // Highest priority: a morning in progress. Never gated.
                 MorningFlowView(session: session)
+                    .transition(.opacity)
             } else if !app.hasCompletedOnboarding {
                 OnboardingFlow()
+                    .transition(.opacity)
             } else if !subscriptions.isSubscribed && subscriptions.isConfigured {
                 // Lapsed / never-converted after onboarding: hard gate.
                 PaywallView(onUnlocked: {})
+                    .transition(.opacity)
             } else {
                 HomeView()
                     .environment(\.koumTheme, theme)
                     .preferredColorScheme(app.themePreference == .system
                                           ? nil
                                           : (app.themePreference == .dark ? .dark : .light))
+                    .transition(.opacity)
             }
         }
+        .animation(KoumMotion.gentleEase, value: route)
         .task {
             AlarmService.shared.startObserving()
             AlarmService.shared.refreshAuthState()

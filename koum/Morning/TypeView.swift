@@ -41,9 +41,8 @@ struct TypeView: View {
             KoumColor.night.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer(minLength: KoumSpacing.lg)
-
                 MicroLabel(text: session.verse.display, color: KoumColor.firstlight)
+                    .padding(.top, KoumSpacing.xxl)
                     .padding(.bottom, KoumSpacing.md)
 
                 Text(targetText)
@@ -53,7 +52,10 @@ struct TypeView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.bottom, KoumSpacing.xl)
 
-                TextField("Type it here", text: $typed, axis: .vertical)
+                TextField(text: $typed, axis: .vertical) {
+                    Text("Type it here")
+                        .foregroundStyle(KoumColor.boneFaint)
+                }
                     .font(KoumType.body)
                     .foregroundStyle(matchColor)
                     .tint(KoumColor.firstlight)

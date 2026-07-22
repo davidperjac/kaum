@@ -44,9 +44,10 @@ struct MorningCompleteView: View {
 
     private var demoContent: some View {
         VStack(spacing: KoumSpacing.md) {
-            Text("✓")
-                .font(KoumType.display)
+            Image(systemName: "checkmark")
+                .font(.system(size: 30, weight: .medium))
                 .foregroundStyle(KoumColor.verified)
+                .padding(.bottom, KoumSpacing.sm)
             Text("That's it.")
                 .font(KoumType.display)
                 .foregroundStyle(KoumColor.bone)
@@ -59,9 +60,14 @@ struct MorningCompleteView: View {
     private var realContent: some View {
         VStack(spacing: KoumSpacing.xl) {
             VStack(spacing: KoumSpacing.sm) {
-                Text("Good morning")
-                    .font(KoumType.display)
-                    .foregroundStyle(KoumColor.bone)
+                HStack(spacing: KoumSpacing.md) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundStyle(KoumColor.verified)
+                    Text("Good morning")
+                        .font(KoumType.display)
+                        .foregroundStyle(KoumColor.bone)
+                }
                 Text("You read \(session.verse.display)")
                     .font(KoumType.body)
                     .foregroundStyle(KoumColor.boneMuted)
@@ -97,20 +103,32 @@ struct MilestoneView: View {
 
     var body: some View {
         let verse = StreakService.milestoneVerse(for: milestone)
-        VStack(spacing: KoumSpacing.lg) {
+        VStack(spacing: 0) {
             Spacer()
             Image("WrenCelebrating")
                 .resizable()
                 .scaledToFit()
                 .frame(height: 96)
                 .accessibilityHidden(true)
-            StreakBadge(count: milestone)
-                .environment(\.koumTheme, KoumTheme(isDark: true))
-            Text("\(milestone) mornings with God")
+                .padding(.bottom, KoumSpacing.lg)
+            Text("\(milestone)")
+                .font(KoumType.streak)
+                .foregroundStyle(KoumColor.firstlight)
+            Text("mornings with God")
                 .font(KoumType.title)
                 .foregroundStyle(KoumColor.bone)
-            VerseBlock(reference: verse.ref, text: verse.text)
-                .padding(.horizontal, KoumSpacing.lg)
+                .padding(.top, KoumSpacing.xs)
+                .padding(.bottom, KoumSpacing.xl)
+            VStack(spacing: KoumSpacing.md) {
+                MicroLabel(text: verse.ref)
+                Text(verse.text)
+                    .font(KoumType.verse)
+                    .koumLineSpacing(10)
+                    .foregroundStyle(KoumColor.bone)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, KoumSpacing.lg)
             Spacer()
             Button("Keep going") { dismiss() }
                 .buttonStyle(.koumPrimary)
