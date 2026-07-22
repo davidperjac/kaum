@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Koum</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Koum rings a real alarm at your wake time — the kind that sounds through Silent and Focus, like the Clock app.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera reads your open Bible page to confirm today's verse. Frames are processed on your phone and never stored or uploaded.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The microphone hears you read the verse aloud. Your voice stays on your phone.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Speech recognition checks the verse you read aloud. Recognition happens on your phone.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Newsreader-300.ttf</string>
+		<string>Newsreader-400.ttf</string>
+		<string>Newsreader-400-italic.ttf</string>
+		<string>Newsreader-500.ttf</string>
+		<string>Inter-400.ttf</string>
+		<string>Inter-500.ttf</string>
+		<string>Inter-600.ttf</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+</dict>
+</plist>
