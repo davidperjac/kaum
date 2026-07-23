@@ -76,9 +76,21 @@ URLs). App Review checks that both links resolve.
 - 120 Spurgeon-adapted devotionals (doctrinally screened, validated).
 - Prayer log with "Answered" marking, journal + calendar archive + search +
   "On this day", streaks with monthly auto-freeze and milestone cards.
-- 15-screen onboarding with live demo (auto-passes after 2 failed attempts,
-  never fails), hard paywall with compliance text, trial day-3/day-5 local
+- Conversational onboarding with live demo (full-verse verification with a
+  visible "Skip for now" after 45s of struggle), progress saved across app
+  launches, hard paywall with compliance text, trial day-3/day-5 local
   notifications, Lock Screen/Home Screen widgets, alarm Live Activity.
 - Unit tests: 23 tests covering the matcher, normalizer, streak rules, and
   bundle-content integrity (every plan day self-verifies against its own
   anchors in both translations).
+
+## Releasing a build
+
+1. Bump `CURRENT_PROJECT_VERSION` in `koum.xcodeproj/project.pbxproj` (all targets).
+2. Archive + upload (Xcode session auth, no credentials needed):
+   `xcodebuild archive -project koum.xcodeproj -scheme koum -destination 'generic/platform=iOS' -archivePath Koum-<ver>-<build>.xcarchive -allowProvisioningUpdates`
+   then `xcodebuild -exportArchive -archivePath <archive> -exportOptionsPlist ExportOptions.plist -allowProvisioningUpdates`
+
+That's it. The "Koum Internal" TestFlight group has automatic distribution
+enabled (`hasAccessToAllBuilds`), so every uploaded build reaches internal
+testers as soon as Apple finishes processing — same setup as cuberpal.
