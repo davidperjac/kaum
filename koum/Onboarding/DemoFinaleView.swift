@@ -9,8 +9,8 @@ struct DemoFinaleView: View {
     @State private var flood: Double = 0        // 0...1 sunrise rise
     @State private var line1 = false            // "That's it."
     @State private var line2 = false            // "That's every morning."
-    @State private var wrenShown = false
-    @State private var notes: [Bool] = [false, false, false]
+    @State private var bookShown = false
+    @State private var bookGlow = false
     @State private var buttonShown = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -74,27 +74,21 @@ struct DemoFinaleView: View {
                     .offset(y: line2 ? 0 : 6)
                     .padding(.top, KoumSpacing.sm)
 
-                // Wren sings the new morning in
-                ZStack(alignment: .topTrailing) {
-                    Image("WrenSinging")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 92)
-                        .accessibilityHidden(true)
-                    HStack(spacing: 5) {
-                        ForEach(notes.indices, id: \.self) { idx in
-                            Text("♪")
-                                .font(.system(size: 13 + CGFloat(idx) * 2))
-                                .foregroundStyle(KoumColor.firstlight)
-                                .opacity(notes[idx] ? 1 : 0)
-                                .offset(y: notes[idx] ? -8 : 4)
-                        }
-                    }
-                    .offset(x: 26, y: -14)
+                // The Book, with morning light rising off the page
+                ZStack {
+                    RadialGradient(
+                        colors: [
+                            KoumColor.firstlight.opacity(bookGlow ? 0.30 : 0.12),
+                            KoumColor.firstlight.opacity(0),
+                        ],
+                        center: .center, startRadius: 0, endRadius: 70
+                    )
+                    .frame(width: 140, height: 140)
+                    GlyphView(glyph: .bookRays, size: 64, color: KoumColor.firstlight, lineWidth: 1.8)
                 }
-                .opacity(wrenShown ? 1 : 0)
-                .offset(y: wrenShown ? 0 : 8)
-                .padding(.top, KoumSpacing.xl)
+                .opacity(bookShown ? 1 : 0)
+                .offset(y: bookShown ? 0 : 8)
+                .padding(.top, KoumSpacing.lg)
 
                 Spacer()
 
@@ -116,8 +110,8 @@ struct DemoFinaleView: View {
             flood = 1
             line1 = true
             line2 = true
-            wrenShown = true
-            notes = [true, true, true]
+            bookShown = true
+            bookGlow = true
             buttonShown = true
             return
         }
@@ -127,11 +121,9 @@ struct DemoFinaleView: View {
 
         withAnimation(KoumMotion.breathEase.delay(0.5)) { line1 = true }
         withAnimation(KoumMotion.breathEase.delay(1.0)) { line2 = true }
-        withAnimation(KoumMotion.gentleEase.delay(1.5)) { wrenShown = true }
-        for idx in notes.indices {
-            withAnimation(KoumMotion.gentleEase.delay(1.8 + Double(idx) * 0.18)) {
-                notes[idx] = true
-            }
+        withAnimation(KoumMotion.gentleEase.delay(1.5)) { bookShown = true }
+        withAnimation(.easeInOut(duration: 2.6).delay(1.7).repeatForever(autoreverses: true)) {
+            bookGlow = true
         }
         withAnimation(KoumMotion.gentleEase.delay(2.2)) { buttonShown = true }
     }

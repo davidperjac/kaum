@@ -103,6 +103,62 @@ import Testing
     }
 }
 
+// MARK: - Full-verse coverage (Speak / Type)
+
+@Suite struct VerseCoverageTests {
+
+    private let verse = "Cause me to hear thy lovingkindness in the morning; for in thee do I trust."
+
+    @Test func partialRecitationDoesNotPass() {
+        // The exact failure the old threshold allowed: a few words ended it.
+        let coverage = VerseCoverage.evaluate(
+            candidate: "cause me to hear", verseText: verse)
+        #expect(!coverage.complete)
+        #expect(coverage.matchedCount == 4)
+    }
+
+    @Test func fullRecitationPasses() {
+        let coverage = VerseCoverage.evaluate(
+            candidate: "cause me to hear thy lovingkindness in the morning for in thee do i trust",
+            verseText: verse)
+        #expect(coverage.complete)
+    }
+
+    @Test func recognizerNearMissesAreForgiven() {
+        // "lovingkindness" garbled, "thee" heard as "the" — user said it all.
+        let coverage = VerseCoverage.evaluate(
+            candidate: "cause me to hear thy loving kindness in the morning for in the do i trust",
+            verseText: verse)
+        #expect(coverage.complete)
+    }
+
+    @Test func skippedPhrasesStayUnlit() {
+        let coverage = VerseCoverage.evaluate(
+            candidate: "cause me to hear for in thee do i trust", verseText: verse)
+        #expect(!coverage.complete)
+    }
+
+    @Test func typingProgressCreditsPartialWord() {
+        let (coverage, partial) = VerseCoverage.typingProgress(
+            typed: "cause me to hear thy lovingk", verseText: verse)
+        #expect(coverage.matchedCount == 5)
+        #expect(partial)
+    }
+
+    @Test func shortWordsGetNoFuzzTolerance() {
+        #expect(!VerseCoverage.wordMatches("god", "gad"))
+        #expect(VerseCoverage.wordMatches("shepherd", "sheperd"))
+    }
+
+    @Test func yahwehSurvivesTheRecognizer() {
+        let psalm = "Yahweh, in the morning you will hear my voice."
+        let coverage = VerseCoverage.evaluate(
+            candidate: "the lord in the morning you will hear my voice",
+            verseText: psalm)
+        #expect(coverage.complete)
+    }
+}
+
 // MARK: - Book name matching (escalation)
 
 @Suite struct BookMatchTests {

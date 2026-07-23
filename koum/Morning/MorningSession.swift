@@ -72,7 +72,8 @@ final class MorningSession {
     func beginVerification(mode: VerifyMode? = nil) {
         if let mode { self.mode = mode }
         let session = VerificationSession(
-            target: verse, anchors: anchors, mode: self.mode, isDemo: isDemo)
+            target: verse, anchors: anchors, mode: self.mode,
+            verseText: verseText, isDemo: isDemo)
         session.onPassed = { [weak self] usedEscapeHatch in
             self?.handleVerified(usedEscapeHatch: usedEscapeHatch)
         }

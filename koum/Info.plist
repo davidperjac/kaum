@@ -41,11 +41,10 @@
 	<string>Speech recognition checks the verse you read aloud. Recognition happens on your phone.</string>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Fraunces-300.ttf</string>
-		<string>Fraunces-400.ttf</string>
-		<string>Fraunces-400-italic.ttf</string>
-		<string>Fraunces-500.ttf</string>
-		<string>Fraunces-600.ttf</string>
+		<string>Lora-400.ttf</string>
+		<string>Lora-400-italic.ttf</string>
+		<string>Lora-500.ttf</string>
+		<string>Lora-600.ttf</string>
 		<string>Inter-400.ttf</string>
 		<string>Inter-500.ttf</string>
 		<string>Inter-600.ttf</string>

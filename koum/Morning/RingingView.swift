@@ -16,6 +16,11 @@ struct RingingView: View {
         ZStack {
             AnimatedDawnBackground()
 
+            // The last stars of the night, still up there with you.
+            StarField(intensity: 0.55, verticalFraction: 0.5)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+
             VStack(spacing: 0) {
                 Spacer(minLength: KoumSpacing.xl)
 
@@ -55,7 +60,7 @@ struct RingingView: View {
                     .buttonStyle(.koumGhost)
                     .padding(.top, KoumSpacing.sm)
                 } else if !session.isDemo {
-                    Text("No more snoozes — your Bible is the way out")
+                    Text("No more snoozes. Your Bible is the way out.")
                         .font(KoumType.caption)
                         .foregroundStyle(KoumColor.boneFaint)
                         .padding(.top, KoumSpacing.md)

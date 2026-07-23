@@ -24,7 +24,7 @@ struct BeforePaywallView: View {
                 .opacity(revealed >= 1 ? 1 : 0)
                 .padding(.bottom, KoumSpacing.lg)
 
-            Text("We didn't build Koum to keep you on your phone. We built it to get you off it — and into the Book.")
+            Text("We didn't build Koum to keep you on your phone. We built it to get you off your phone and into the Book.")
                 .font(KoumType.devotional)
                 .koumLineSpacing(8)
                 .foregroundStyle(KoumColor.boneMuted)
@@ -32,7 +32,7 @@ struct BeforePaywallView: View {
                 .opacity(revealed >= 2 ? 1 : 0)
                 .padding(.bottom, KoumSpacing.md)
 
-            Text("So before you pay anything, we want you to live a few real mornings with it.")
+            Text("So we want you to live your first real mornings with it, free.")
                 .font(KoumType.devotional)
                 .koumLineSpacing(8)
                 .foregroundStyle(KoumColor.bone)
@@ -51,13 +51,13 @@ struct BeforePaywallView: View {
                         timelineRow(
                             glyph: .book,
                             title: "Day \(trialDays - 1)",
-                            detail: "We remind you the trial is ending — honestly, like we promised."
+                            detail: "We remind you the trial is ending. Honestly, like we promised."
                         )
                     }
                     timelineRow(
                         glyph: .check,
                         title: "Day \(trialDays)",
-                        detail: "Trial ends. Keep going, or cancel in Settings — no hard feelings."
+                        detail: "Trial ends. Keep going, or cancel in Settings. No hard feelings."
                     )
                 }
                 .padding(KoumSpacing.md + KoumSpacing.xs)

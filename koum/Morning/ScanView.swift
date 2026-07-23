@@ -63,7 +63,7 @@ struct ScanView: View {
                     }
 
                     if verification.offersEscapeHatch {
-                        Button("I'll take your word for it") {
+                        Button(verification.isDemo ? "Skip for now" : "I'll take your word for it") {
                             verification.useEscapeHatch()
                         }
                         .buttonStyle(.koumGhost)

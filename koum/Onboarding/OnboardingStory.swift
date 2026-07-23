@@ -15,7 +15,7 @@ struct NameScreen: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Before anything else —")
+            Text("Before anything else,")
                 .font(KoumType.title)
                 .foregroundStyle(KoumColor.boneMuted)
                 .padding(.top, KoumSpacing.xxl)
@@ -62,12 +62,7 @@ struct NameScreen: View {
                 .buttonStyle(.koumPrimary)
                 .disabled(trimmed.isEmpty)
                 .opacity(trimmed.isEmpty ? 0.4 : 1)
-                .padding(.bottom, KoumSpacing.xs)
-
-            Button("Skip") { name = ""; onContinue() }
-                .buttonStyle(.koumGhost)
-                .frame(maxWidth: .infinity)
-                .padding(.bottom, KoumSpacing.sm)
+                .padding(.bottom, KoumSpacing.lg)
         }
         .padding(.horizontal, KoumSpacing.margin)
         .onAppear {
@@ -106,7 +101,7 @@ enum OnboardingVoice {
     /// Reaction to screen "How often do you actually start your morning
     /// with God?"
     static func frequencyAck(_ answer: String, name: String) -> (lines: [String], button: String) {
-        let greeting = name.isEmpty ? "" : "\(name) — "
+        let greeting = name.isEmpty ? "" : "\(name), "
         switch answer {
         case "Almost every day":
             return (["\(greeting)then you already\nknow what it gives you.",
@@ -137,7 +132,7 @@ enum OnboardingVoice {
                     "I'd rather it be the Lord")
         }
         if blockers.contains("I run out of time") {
-            return (["Morning time isn't found.", "It's kept —\nbefore anything else\ncan claim it."],
+            return (["Morning time isn't found.", "It's kept, before\nanything else\ncan claim it."],
                     "Keep it for me")
         }
         return (["Willpower was never\ngoing to be enough.", "Habits need something\nthat doesn't negotiate\nat 6am."],
@@ -155,16 +150,20 @@ enum OnboardingVoice {
 
 // MARK: - Scripture interstitial
 
-/// Scripture at the centre of the conversation. World English Bible.
+/// Scripture at the centre of the conversation. World English Bible. The
+/// words that matter most carry a soft golden highlight, like a real
+/// highlighter pass on a loved Bible page.
 struct VerseInterstitial: View {
     let eyebrow: String
     let reference: String
     let text: String
+    var keywords: [String] = []
     let closing: String
     let button: String
     let action: () -> Void
 
     @State private var stage = 0
+    @State private var highlighted = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -177,11 +176,17 @@ struct VerseInterstitial: View {
                 .opacity(stage >= 1 ? 1 : 0)
                 .padding(.bottom, KoumSpacing.xl)
 
-            VerseBlock(
-                reference: reference,
-                text: text,
-                referenceColor: KoumColor.firstlight
-            )
+            VStack(alignment: .leading, spacing: KoumSpacing.md) {
+                MicroLabel(text: reference, color: KoumColor.firstlight)
+                Text(highlightedText)
+                    .font(KoumType.verse)
+                    .koumLineSpacing(12)
+                    .foregroundStyle(KoumColor.bone)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(reference). \(text)")
             .opacity(stage >= 2 ? 1 : 0)
             .offset(y: stage >= 2 ? 0 : 6)
             .padding(.bottom, KoumSpacing.xl)
@@ -204,13 +209,38 @@ struct VerseInterstitial: View {
         .onAppear { reveal() }
     }
 
+    /// The verse with its key words washed in first light. The wash arrives
+    /// a beat after the verse itself — read first, then see.
+    private var highlightedText: AttributedString {
+        var attributed = AttributedString(text)
+        guard highlighted else { return attributed }
+        for keyword in keywords {
+            var searchStart = attributed.startIndex
+            while let range = attributed[searchStart...].range(
+                of: keyword, options: .caseInsensitive) {
+                // A real highlighter pass: bright gold, ink-dark word.
+                attributed[range].backgroundColor = KoumColor.firstlight.opacity(0.85)
+                attributed[range].foregroundColor = KoumColor.night
+                searchStart = range.upperBound
+            }
+        }
+        return attributed
+    }
+
     private func reveal() {
-        if reduceMotion { stage = 3; return }
+        if reduceMotion {
+            stage = 3
+            highlighted = true
+            return
+        }
         withAnimation(KoumMotion.breathEase) { stage = 1 }
         DispatchQueue.main.asyncAfter(deadline: .now() + KoumMotion.breath) {
             withAnimation(KoumMotion.breathEase) { stage = 2 }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + KoumMotion.breath * 2.4) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + KoumMotion.breath * 2.2) {
+            withAnimation(.easeInOut(duration: 1.2)) { highlighted = true }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + KoumMotion.breath * 2.6) {
             withAnimation(KoumMotion.breathEase) { stage = 3 }
         }
     }
@@ -219,7 +249,8 @@ struct VerseInterstitial: View {
 // MARK: - Building your morning
 
 /// The quiet moment where Koum assembles the plan. Not a spinner — dawn
-/// arriving over a few honest lines of work.
+/// arriving over a few honest lines of work. The shared sky shows through;
+/// this screen adds only its words.
 struct BuildingScreen: View {
     let name: String
     var lines: [String] = [
@@ -230,41 +261,36 @@ struct BuildingScreen: View {
     let onDone: () -> Void
 
     @State private var currentLine = -1
-    @State private var progress: Double = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        ZStack {
-            DawnGradient(progress: progress).ignoresSafeArea()
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer()
 
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer()
+            Text(name.isEmpty ? "Building your morning." : "Building your morning, \(name).")
+                .font(KoumType.display)
+                .foregroundStyle(KoumColor.bone)
+                .padding(.bottom, KoumSpacing.xl)
 
-                Text(name.isEmpty ? "Building your morning." : "Building your morning, \(name).")
-                    .font(KoumType.display)
-                    .foregroundStyle(KoumColor.bone)
-                    .padding(.bottom, KoumSpacing.xl)
-
-                VStack(alignment: .leading, spacing: KoumSpacing.md) {
-                    ForEach(lines.indices, id: \.self) { idx in
-                        HStack(spacing: KoumSpacing.md) {
-                            Image(systemName: idx < currentLine ? "checkmark" : "circle")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(idx < currentLine ? KoumColor.verified : KoumColor.boneFaint)
-                                .contentTransition(.symbolEffect(.replace))
-                            Text(lines[idx])
-                                .font(KoumType.body)
-                                .foregroundStyle(idx <= currentLine ? KoumColor.bone : KoumColor.boneFaint)
-                        }
-                        .opacity(idx <= currentLine + 1 ? 1 : 0.4)
+            VStack(alignment: .leading, spacing: KoumSpacing.md) {
+                ForEach(lines.indices, id: \.self) { idx in
+                    HStack(spacing: KoumSpacing.md) {
+                        Image(systemName: idx < currentLine ? "checkmark" : "circle")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(idx < currentLine ? KoumColor.verified : KoumColor.boneFaint)
+                            .contentTransition(.symbolEffect(.replace))
+                        Text(lines[idx])
+                            .font(KoumType.body)
+                            .foregroundStyle(idx <= currentLine ? KoumColor.bone : KoumColor.boneFaint)
                     }
+                    .opacity(idx <= currentLine + 1 ? 1 : 0.4)
                 }
-
-                Spacer()
-                Spacer()
             }
-            .padding(.horizontal, KoumSpacing.margin)
+
+            Spacer()
+            Spacer()
         }
+        .padding(.horizontal, KoumSpacing.margin)
         .onAppear { run() }
     }
 
@@ -274,7 +300,6 @@ struct BuildingScreen: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { onDone() }
             return
         }
-        withAnimation(.linear(duration: 3.2)) { progress = 1 }
         for idx in 0...lines.count {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5 + Double(idx) * 0.85) {
                 withAnimation(KoumMotion.quickEase) { currentLine = idx }

@@ -8,6 +8,7 @@ enum KoumGlyph {
     case mic
     case keyboard
     case book
+    case bookRays
     case check
     case chevronRight
     case chevronDown
@@ -32,6 +33,7 @@ struct GlyphView: View {
         case .mic: AnyShape(MicGlyph())
         case .keyboard: AnyShape(KeyboardGlyph())
         case .book: AnyShape(BookGlyph())
+        case .bookRays: AnyShape(BookRaysGlyph())
         case .check: AnyShape(CheckmarkShape())
         case .chevronRight: AnyShape(ChevronGlyph(down: false))
         case .chevronDown: AnyShape(ChevronGlyph(down: true))
@@ -172,6 +174,56 @@ struct BookGlyph: Shape {
         // Spine
         p.move(to: CGPoint(x: w * 0.5, y: h * 0.24))
         p.addLine(to: CGPoint(x: w * 0.5, y: h * 0.86))
+        return p
+    }
+}
+
+/// Open Bible with light rising from the pages: the finale mark. The book
+/// sits in the lower half; three rays climb from the open spread like the
+/// first light of morning coming off the page.
+struct BookRaysGlyph: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let w = rect.width, h = rect.height
+        let top = h * 0.52       // book top edge
+        let bottom = h * 0.98    // book bottom edge
+
+        // Left page
+        p.move(to: CGPoint(x: w * 0.5, y: top + h * 0.04))
+        p.addCurve(
+            to: CGPoint(x: 0, y: top),
+            control1: CGPoint(x: w * 0.35, y: top - h * 0.06),
+            control2: CGPoint(x: w * 0.14, y: top - h * 0.06)
+        )
+        p.addLine(to: CGPoint(x: 0, y: bottom - h * 0.06))
+        p.addCurve(
+            to: CGPoint(x: w * 0.5, y: bottom),
+            control1: CGPoint(x: w * 0.14, y: bottom - h * 0.1),
+            control2: CGPoint(x: w * 0.35, y: bottom - h * 0.08)
+        )
+        // Right page (mirror)
+        p.addCurve(
+            to: CGPoint(x: w, y: bottom - h * 0.06),
+            control1: CGPoint(x: w * 0.65, y: bottom - h * 0.08),
+            control2: CGPoint(x: w * 0.86, y: bottom - h * 0.1)
+        )
+        p.addLine(to: CGPoint(x: w, y: top))
+        p.addCurve(
+            to: CGPoint(x: w * 0.5, y: top + h * 0.04),
+            control1: CGPoint(x: w * 0.86, y: top - h * 0.06),
+            control2: CGPoint(x: w * 0.65, y: top - h * 0.06)
+        )
+        // Spine
+        p.move(to: CGPoint(x: w * 0.5, y: top + h * 0.04))
+        p.addLine(to: CGPoint(x: w * 0.5, y: bottom))
+
+        // Light rising from the page: centre ray tallest, two angled.
+        p.move(to: CGPoint(x: w * 0.5, y: h * 0.3))
+        p.addLine(to: CGPoint(x: w * 0.5, y: h * 0.06))
+        p.move(to: CGPoint(x: w * 0.3, y: h * 0.36))
+        p.addLine(to: CGPoint(x: w * 0.19, y: h * 0.17))
+        p.move(to: CGPoint(x: w * 0.7, y: h * 0.36))
+        p.addLine(to: CGPoint(x: w * 0.81, y: h * 0.17))
         return p
     }
 }

@@ -82,32 +82,40 @@ struct DebugPreviewHost: View {
                 .environment(\.koumTheme, KoumTheme(isDark: true))
                 .preferredColorScheme(.dark)
         case "name":
-            ZStack { KoumColor.night.ignoresSafeArea()
+            ZStack { SkyBackdrop(progress: 0.08, dimmed: true)
                 NameScreen(name: .constant("")) {} }
                 .preferredColorScheme(.dark)
         case "ack":
-            ZStack { KoumColor.night.ignoresSafeArea()
+            ZStack { SkyBackdrop(progress: 0.16)
                 AcknowledgementScreen(
                     lines: OnboardingVoice.frequencyAck("I keep meaning to", name: "David").lines,
                     button: OnboardingVoice.frequencyAck("I keep meaning to", name: "David").button
                 ) {} }
                 .preferredColorScheme(.dark)
+        case "coldopen":
+            ZStack { SkyBackdrop(progress: 0)
+                OnboardingStatement(
+                    lines: ["You already know", "you should start", "your day with God."],
+                    button: "I know"
+                ) {} }
+                .preferredColorScheme(.dark)
         case "versewhy":
-            ZStack { KoumColor.night.ignoresSafeArea()
+            ZStack { SkyBackdrop(progress: 0.3)
                 VerseInterstitial(
                     eyebrow: "Before the crowds found Him, this was His habit.",
                     reference: "Mark 1:35",
                     text: "Early in the morning, while it was still dark, he rose up and went out, and departed into a deserted place, and prayed there.",
+                    keywords: ["morning", "rose up", "prayed"],
                     closing: "The quiet came first. Everything else came out of it.",
                     button: "Continue"
                 ) {} }
                 .preferredColorScheme(.dark)
         case "building":
-            ZStack { KoumColor.night.ignoresSafeArea()
+            ZStack { SkyBackdrop(progress: 0.85)
                 BuildingScreen(name: "David") {} }
                 .preferredColorScheme(.dark)
         case "summary":
-            ZStack { KoumColor.night.ignoresSafeArea()
+            ZStack { SkyBackdrop(progress: 0.92)
                 SummaryScreen(
                     name: "David",
                     time: Date(),
@@ -119,12 +127,16 @@ struct DebugPreviewHost: View {
                 .preferredColorScheme(.dark)
         case "splash":
             SplashView {}
-        case "walkthrough":
-            ZStack { KoumColor.night.ignoresSafeArea()
-                WalkthroughScreen(page: .constant(1)) {} }
+        case "walkthrough", "walkthrough0", "walkthrough2", "walkthrough3":
+            let pageIdx = name == "walkthrough0" ? 0 : (name == "walkthrough2" ? 2 : (name == "walkthrough3" ? 3 : 1))
+            ZStack { SkyBackdrop(progress: 0.52)
+                WalkthroughScreen(page: .constant(pageIdx)) {} }
+                .preferredColorScheme(.dark)
+        case "demointro":
+            DemoAlarmView {}
                 .preferredColorScheme(.dark)
         case "beforepaywall":
-            ZStack { KoumColor.night.ignoresSafeArea()
+            ZStack { SkyBackdrop(progress: 0.96)
                 BeforePaywallView(name: "David", motivation: "more grounded", trialDays: 3) {} }
                 .preferredColorScheme(.dark)
         case "finale":

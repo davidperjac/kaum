@@ -243,7 +243,7 @@ struct ModeChoiceScreen: View {
                 }
             }
 
-            Text("You can change this anytime — even mid-alarm.")
+            Text("You can change this anytime, even mid-alarm.")
                 .font(KoumType.caption)
                 .foregroundStyle(KoumColor.boneFaint)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -436,7 +436,7 @@ struct AlarmPermissionScreen: View {
                 .foregroundStyle(KoumColor.bone)
                 .padding(.bottom, KoumSpacing.lg)
 
-            Text("Koum needs permission to use iPhone alarms — the real kind, that ring through Silent and Focus.")
+            Text("Koum needs permission to use iPhone alarms. The real kind, that ring through Silent and Focus.")
                 .font(KoumType.body)
                 .koumLineSpacing(6)
                 .foregroundStyle(KoumColor.boneMuted)
@@ -489,6 +489,10 @@ struct AlarmPermissionScreen: View {
 
 // MARK: - Summary / the pact
 
+/// The pact. The sun is nearly up behind this screen; the plan reads like a
+/// promise being sealed, not a settings recap. Everything arrives on a
+/// breath: the name, the covenant card glowing with first light, the five
+/// steps lighting one by one, their own words handed back to them.
 struct SummaryScreen: View {
     var name: String = ""
     let time: Date
@@ -498,66 +502,143 @@ struct SummaryScreen: View {
     let motivation: String
     let onContinue: () -> Void
 
+    @State private var stage = 0
+    @State private var litSteps = 0
+    @State private var cardGlow = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private let steps = [
+        "Wake up.",
+        "Open your Bible.",
+        "Read one verse.",
+        "Pray for a minute.",
+        "Write one line.",
+    ]
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(name.isEmpty ? "Here's your morning." : "\(name), here's\nyour morning.")
+            MicroLabel(text: "Your morning", color: KoumColor.firstlight)
+                .padding(.top, KoumSpacing.xl)
+                .padding(.bottom, KoumSpacing.sm)
+                .opacity(stage >= 1 ? 1 : 0)
+
+            Text(name.isEmpty ? "Here it is." : "\(name), here it is.")
                 .font(KoumType.display)
                 .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
-                .padding(.top, KoumSpacing.xxl)
-                .padding(.bottom, KoumSpacing.xl)
+                .fixedSize(horizontal: false, vertical: true)
+                .opacity(stage >= 1 ? 1 : 0)
+                .offset(y: stage >= 1 ? 0 : 6)
+                .padding(.bottom, KoumSpacing.lg)
 
-            VStack(alignment: .leading, spacing: KoumSpacing.xs) {
-                Text("\(time.formatted(date: .omitted, time: .shortened)) · \(daysDisplay)")
-                Text(source.title)
-                Text("\(mode.title) to dismiss")
+            // The covenant card: their plan, glowing with first light.
+            VStack(alignment: .leading, spacing: KoumSpacing.md) {
+                summaryRow(glyph: .sunrise,
+                           title: time.formatted(date: .omitted, time: .shortened),
+                           detail: daysDisplay)
+                summaryRow(glyph: .book,
+                           title: source.title,
+                           detail: "One verse, waiting for you")
+                summaryRow(glyph: mode.glyph,
+                           title: mode.title,
+                           detail: "That's what ends the alarm")
             }
-            .font(KoumType.label)
-            .foregroundStyle(KoumColor.bone)
             .padding(KoumSpacing.md + KoumSpacing.xs)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(KoumColor.nightRaised)
+                    .fill(KoumColor.nightRaised.opacity(0.85))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(KoumColor.firstlight.opacity(cardGlow ? 0.45 : 0.2), lineWidth: 1)
+                    )
+                    .shadow(color: KoumColor.firstlight.opacity(cardGlow ? 0.16 : 0.05),
+                            radius: 24, y: 6)
             )
-            .padding(.bottom, KoumSpacing.xl)
+            .opacity(stage >= 2 ? 1 : 0)
+            .offset(y: stage >= 2 ? 0 : 8)
+            .padding(.bottom, KoumSpacing.lg)
 
-            VStack(alignment: .leading, spacing: KoumSpacing.xs) {
-                Text("Wake up.")
-                Text("Open your Bible.")
-                Text("Read one verse.")
-                Text("Pray for a minute.")
-                Text("Write one line.")
+            // The five steps, catching light one by one.
+            VStack(alignment: .leading, spacing: KoumSpacing.sm) {
+                ForEach(steps.indices, id: \.self) { idx in
+                    HStack(spacing: KoumSpacing.md) {
+                        Circle()
+                            .fill(idx < litSteps ? KoumColor.firstlight : KoumColor.nightEdge)
+                            .frame(width: 5, height: 5)
+                        Text(steps[idx])
+                            .font(KoumType.body)
+                            .foregroundStyle(idx < litSteps ? KoumColor.bone : KoumColor.boneFaint)
+                    }
+                }
+                Text("Under four minutes, all of it.")
+                    .font(KoumType.caption)
+                    .foregroundStyle(KoumColor.boneMuted)
+                    .padding(.top, KoumSpacing.xs)
             }
-            .font(KoumType.body)
-            .foregroundStyle(KoumColor.boneMuted)
-            .padding(.bottom, KoumSpacing.md)
-
-            Text("Under four minutes.")
-                .font(KoumType.body)
-                .foregroundStyle(KoumColor.bone)
-                .padding(.bottom, KoumSpacing.xl)
+            .opacity(stage >= 3 ? 1 : 0)
+            .padding(.bottom, KoumSpacing.lg)
 
             if !motivation.isEmpty {
                 Text("You said you wanted to feel \(motivation).\nThis is how that starts.")
                     .font(KoumType.devotionalItalic)
                     .koumLineSpacing(6)
                     .foregroundStyle(KoumColor.boneMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .opacity(stage >= 4 ? 1 : 0)
             }
 
             Spacer()
 
-            Text("Tomorrow at \(time.formatted(date: .omitted, time: .shortened)) — one promise, kept.")
+            Text("Tomorrow at \(time.formatted(date: .omitted, time: .shortened)). One promise, kept.")
                 .font(KoumType.caption)
                 .foregroundStyle(KoumColor.boneFaint)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, KoumSpacing.sm)
+                .opacity(stage >= 4 ? 1 : 0)
 
             Button("I'll be there", action: onContinue)
                 .buttonStyle(.koumPrimary)
+                .opacity(stage >= 4 ? 1 : 0)
                 .padding(.bottom, KoumSpacing.lg)
         }
         .padding(.horizontal, KoumSpacing.margin)
+        .onAppear { reveal() }
+    }
+
+    private func summaryRow(glyph: KoumGlyph, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: KoumSpacing.md) {
+            GlyphView(glyph: glyph, size: 20)
+                .frame(width: 24)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(KoumType.label)
+                    .foregroundStyle(KoumColor.bone)
+                Text(detail)
+                    .font(KoumType.caption)
+                    .foregroundStyle(KoumColor.boneMuted)
+            }
+        }
+    }
+
+    private func reveal() {
+        if reduceMotion {
+            stage = 4
+            litSteps = steps.count
+            cardGlow = true
+            return
+        }
+        withAnimation(KoumMotion.breathEase) { stage = 1 }
+        withAnimation(KoumMotion.breathEase.delay(0.5)) { stage = 2 }
+        withAnimation(.easeInOut(duration: 2.4).delay(0.9)) { cardGlow = true }
+        withAnimation(KoumMotion.breathEase.delay(1.0)) { stage = 3 }
+        for idx in steps.indices {
+            withAnimation(KoumMotion.quickEase.delay(1.2 + Double(idx) * 0.22)) {
+                litSteps = idx + 1
+            }
+        }
+        withAnimation(KoumMotion.breathEase.delay(1.2 + Double(steps.count) * 0.22)) { stage = 4 }
     }
 
     private var daysDisplay: String {

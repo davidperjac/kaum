@@ -3,8 +3,10 @@ import SwiftUI
 
 /// The onboarding conversation. Every question is followed by a reaction to
 /// the answer; Scripture carries the "why" at two moments; the live demo
-/// carries the proof. Nothing ever advances on a tap the user didn't confirm,
-/// and a quiet back chevron sits on every screen where going back is safe.
+/// carries the proof. One continuous pre-dawn sky sits behind the whole
+/// conversation and brightens as the user walks toward their first morning.
+/// The flow only moves forward — no back chevrons, no retreat — and every
+/// step is saved, so closing the app resumes exactly where they left off.
 struct OnboardingFlow: View {
     @Environment(AppModel.self) private var app
     @Environment(SubscriptionManager.self) private var subscriptions
@@ -26,19 +28,50 @@ struct OnboardingFlow: View {
         case paywall, confirmation
     }
 
-    @State private var screen: Screen = .coldOpen
+    @State private var screen: Screen
     @State private var walkthroughPage = 0
 
     // Answers
-    @State private var userName = ""
-    @State private var howOften = ""
-    @State private var blockers: Set<String> = []
-    @State private var motivation = ""
-    @State private var mode: VerifyMode = .scan
-    @State private var alarmTime = defaultTime
-    @State private var repeatDays: Set<Int> = [2, 3, 4, 5, 6]
-    @State private var verseSource: VerseSource = .koumPlan
+    @State private var userName: String
+    @State private var howOften: String
+    @State private var blockers: Set<String>
+    @State private var motivation: String
+    @State private var mode: VerifyMode
+    @State private var alarmTime: Date
+    @State private var repeatDays: Set<Int>
+    @State private var verseSource: VerseSource
     @State private var permissionDenied = false
+
+    init() {
+        let saved = OnboardingProgress.load()
+        _screen = State(initialValue: Self.resumeScreen(from: saved))
+        _userName = State(initialValue: saved?.userName ?? "")
+        _howOften = State(initialValue: saved?.howOften ?? "")
+        _blockers = State(initialValue: saved?.blockers ?? [])
+        _motivation = State(initialValue: saved?.motivation ?? "")
+        _mode = State(initialValue: VerifyMode(rawValue: saved?.modeRaw ?? "") ?? .scan)
+        _repeatDays = State(initialValue: saved?.repeatDays ?? [2, 3, 4, 5, 6])
+        _verseSource = State(initialValue: saved?.verseSource ?? .koumPlan)
+        if let minutes = saved?.alarmMinutes {
+            var comps = DateComponents()
+            comps.hour = minutes / 60
+            comps.minute = minutes % 60
+            _alarmTime = State(initialValue: Calendar.current.date(from: comps) ?? Self.defaultTime)
+        } else {
+            _alarmTime = State(initialValue: Self.defaultTime)
+        }
+    }
+
+    /// Transient screens can't be re-entered cold; land on the nearest
+    /// stable neighbour instead.
+    private static func resumeScreen(from saved: OnboardingProgress?) -> Screen {
+        guard let saved, let screen = Screen(rawValue: saved.screenRaw) else { return .coldOpen }
+        switch screen {
+        case .building: return .summary
+        case .paywall: return .beforePaywall
+        default: return screen
+        }
+    }
 
     private static var defaultTime: Date {
         var comps = DateComponents()
@@ -49,34 +82,73 @@ struct OnboardingFlow: View {
 
     var body: some View {
         ZStack {
-            KoumColor.night.ignoresSafeArea()
+            // The sky owns the whole conversation. The demo and paywall
+            // bring their own worlds; everything else lives under dawn.
+            if screenShowsSky {
+                SkyBackdrop(progress: skyProgress, dimmed: skyDimmed)
+                    .transition(.opacity)
+            } else {
+                KoumColor.night.ignoresSafeArea()
+            }
 
             content
-
-            // Quiet back chevron wherever going back is safe
-            if let previous = previousScreen {
-                VStack {
-                    HStack {
-                        Button {
-                            goBack(to: previous)
-                        } label: {
-                            GlyphView(glyph: .chevronRight, size: 16, color: KoumColor.boneFaint)
-                                .rotationEffect(.degrees(180))
-                                .frame(width: 44, height: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .accessibilityLabel("Back")
-                        Spacer()
-                    }
-                    Spacer()
-                }
-                .padding(.top, KoumSpacing.xs)
-                .padding(.leading, KoumSpacing.xs)
-            }
         }
         .animation(KoumMotion.gentleEase, value: screen)
         .environment(\.koumTheme, KoumTheme(isDark: true))
         .preferredColorScheme(.dark)
+        .onChange(of: screen) { _, _ in persist() }
+    }
+
+    // MARK: - Sky choreography
+
+    /// How far dawn has come, screen by screen. The welcome sits in deep
+    /// night; the sun is cresting by the pact.
+    private var skyProgress: Double {
+        switch screen {
+        case .coldOpen: 0.0
+        case .problem: 0.04
+        case .nameAsk: 0.08
+        case .howOften: 0.12
+        case .ackFrequency: 0.16
+        case .blockers: 0.20
+        case .ackBlockers: 0.24
+        case .verseWhy: 0.30
+        case .motivation: 0.36
+        case .ackMotivation: 0.40
+        case .whyDaily: 0.46
+        case .walkthrough: 0.52
+        case .demo: 0.55
+        case .mode: 0.60
+        case .time: 0.65
+        case .days: 0.70
+        case .verseSource: 0.74
+        case .alarmPermission: 0.78
+        case .building: 0.85
+        case .summary: 0.92
+        case .beforePaywall: 0.96
+        case .paywall: 1.0
+        case .confirmation: 1.0
+        }
+    }
+
+    /// Control-dense screens get a deeper scrim so cards stay crisp.
+    private var skyDimmed: Bool {
+        switch screen {
+        case .howOften, .blockers, .motivation, .mode, .time, .days,
+             .verseSource, .alarmPermission, .nameAsk:
+            true
+        default:
+            false
+        }
+    }
+
+    /// The demo simulates a real (dark) morning and the paywall paints its
+    /// own dawn; both opt out of the shared sky.
+    private var screenShowsSky: Bool {
+        switch screen {
+        case .demo, .paywall: false
+        default: true
+        }
     }
 
     @ViewBuilder
@@ -118,7 +190,7 @@ struct OnboardingFlow: View {
         case .blockers:
             OnboardingMultiChoice(
                 question: "What usually gets in the way?",
-                hint: "(choose any — be honest)",
+                hint: "(choose any. be honest)",
                 options: ["I hit snooze", "I grab my phone first", "I run out of time", "I forget", "I start and don't keep it up"],
                 selection: $blockers
             ) { advance(.ackBlockers) }
@@ -136,6 +208,7 @@ struct OnboardingFlow: View {
                 eyebrow: "Before the crowds found Jesus, this was his habit.",
                 reference: "Mark 1:35",
                 text: "Early in the morning, while it was still dark, he rose up and went out, and departed into a deserted place, and prayed there.",
+                keywords: ["morning", "rose up", "prayed"],
                 closing: "The quiet came first. Everything else came out of it.",
                 button: "Continue"
             ) { advance(.motivation) }
@@ -167,7 +240,8 @@ struct OnboardingFlow: View {
                 eyebrow: "David was a king with a kingdom to run. The Lord still got the first appointment of his day.",
                 reference: "Psalm 5:3",
                 text: "Yahweh, in the morning you will hear my voice. In the morning I will lay my requests before you, and will watch expectantly.",
-                closing: "First voice, first requests, first thing. Morning by morning — that's the habit.",
+                keywords: ["morning", "voice", "watch expectantly"],
+                closing: "First voice, first requests, first thing. Morning by morning. That's the habit.",
                 button: "Every morning, then"
             ) { advance(.walkthrough) }
             .transition(.koumStep)
@@ -241,50 +315,11 @@ struct OnboardingFlow: View {
                 time: alarmTime,
                 trialDays: subscriptions.isInTrial ? subscriptions.yearlyTrialDays : nil
             ) {
+                OnboardingProgress.clear()
                 app.hasCompletedOnboarding = true
             }
             .transition(.koumStep)
         }
-    }
-
-    // MARK: - Back navigation
-
-    /// Where the back chevron leads. nil hides it (first screen, the demo,
-    /// the building moment, the paywall pair, and the confirmation).
-    private var previousScreen: Screen? {
-        switch screen {
-        case .coldOpen, .demo, .building, .paywall, .confirmation: nil
-        case .problem: .coldOpen
-        case .nameAsk: .problem
-        case .howOften: .nameAsk
-        case .ackFrequency: .howOften
-        case .blockers: .howOften
-        case .ackBlockers: .blockers
-        case .verseWhy: .blockers
-        case .motivation: .verseWhy
-        case .ackMotivation: .motivation
-        case .whyDaily: .motivation
-        case .walkthrough: .whyDaily
-        // After the demo: back skips the demo (never replay an alarm) and
-        // returns to the walkthrough.
-        case .mode: .walkthrough
-        case .time: .mode
-        case .days: .time
-        case .verseSource: .days
-        case .alarmPermission: .verseSource
-        case .summary: .alarmPermission
-        case .beforePaywall: .summary
-        }
-    }
-
-    private func goBack(to previous: Screen) {
-        KoumHaptics.selection()
-        if screen == .walkthrough, walkthroughPage > 0 {
-            withAnimation(KoumMotion.gentleEase) { walkthroughPage -= 1 }
-            return
-        }
-        if previous == .walkthrough { walkthroughPage = 0 }
-        screen = previous
     }
 
     // MARK: - Helpers
@@ -320,12 +355,28 @@ struct OnboardingFlow: View {
     }
 
     private func personalized(_ question: String) -> String {
-        userName.isEmpty ? question : "\(userName) — \(question.prefix(1).lowercased() + question.dropFirst())"
+        userName.isEmpty ? question : "\(userName), \(question.prefix(1).lowercased() + question.dropFirst())"
     }
 
     private func advance(_ next: Screen) {
         KoumHaptics.buttonPress()
         screen = next
+    }
+
+    /// Save the whole conversation so a closed app reopens mid-sentence.
+    private func persist() {
+        let comps = Calendar.current.dateComponents([.hour, .minute], from: alarmTime)
+        var progress = OnboardingProgress()
+        progress.screenRaw = screen.rawValue
+        progress.userName = userName
+        progress.howOften = howOften
+        progress.blockers = blockers
+        progress.motivation = motivation
+        progress.modeRaw = mode.rawValue
+        progress.alarmMinutes = (comps.hour ?? 6) * 60 + (comps.minute ?? 30)
+        progress.repeatDays = repeatDays
+        progress.verseSource = verseSource
+        progress.save()
     }
 
     /// Create the alarm from the collected answers and sync everything.

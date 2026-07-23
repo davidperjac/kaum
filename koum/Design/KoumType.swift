@@ -2,21 +2,22 @@ import SwiftUI
 
 /// Koum typography.
 ///
-/// The split is semantic, not aesthetic: **serif (Fraunces) is the voice of
+/// The split is semantic, not aesthetic: **serif (Lora) is the voice of
 /// Scripture; sans (Inter) is the voice of the app.** They never trade roles.
 ///
-/// Fraunces carries real warmth at display sizes — hand-set, not default.
-/// Inter runs heavier than typical (SemiBold buttons) so nothing reads thin
-/// on a dark screen at 6am. All styles scale with Dynamic Type.
+/// Lora carries calligraphic warmth at display sizes and stays sturdy at
+/// verse sizes on a dark screen. Inter runs heavier than typical (SemiBold
+/// buttons) so nothing reads thin at 6am. All styles scale with Dynamic Type.
 enum KoumType {
 
     // MARK: Font family names (PostScript names as bundled)
 
-    private static let serifRegular = "Fraunces-Regular"
-    private static let serifMedium = "Fraunces-Medium"
-    private static let serifSemiBold = "Fraunces-SemiBold"
-    private static let serifLight = "Fraunces-Light"
-    private static let serifItalic = "Fraunces-Italic"
+    private static let serifRegular = "Lora-Regular"
+    private static let serifMedium = "Lora-Medium"
+    private static let serifSemiBold = "Lora-SemiBold"
+    /// Lora ships no 300 weight; Regular carries the clock face.
+    private static let serifLight = "Lora-Regular"
+    private static let serifItalic = "Lora-Italic"
     private static let sansRegular = "Inter-Regular"
     private static let sansMedium = "Inter-Medium"
     private static let sansSemiBold = "Inter-SemiBold"
@@ -62,10 +63,10 @@ enum KoumType {
     /// Streak number. 48.
     static let streak = Font.custom(serifSemiBold, size: 48, relativeTo: .largeTitle)
 
-    /// Wordmark: KOUM in Fraunces SemiBold, letterspaced by the caller.
+    /// Wordmark: KOUM in Lora SemiBold, letterspaced by the caller.
     static let wordmark = Font.custom(serifSemiBold, size: 24, relativeTo: .title2)
 
-    /// Splash verse — Fraunces at ceremony size.
+    /// Splash verse — Lora at ceremony size.
     static let splash = Font.custom(serifMedium, size: 30, relativeTo: .largeTitle)
 }
 

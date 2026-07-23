@@ -17,7 +17,10 @@ final class VerificationSession {
     let anchors: VerseAnchors
     let verseTokens: Set<String>
     let mode: VerifyMode
-    /// Demo mode (onboarding): auto-passes after 2 failed attempts.
+    /// The full verse text — Speak and Type must cover every word of it.
+    let verseText: String
+    /// Demo mode (onboarding): softer guidance and a "skip" once the user
+    /// has genuinely struggled. Never an invisible auto-pass.
     let isDemo: Bool
 
     private(set) var stage: Stage = .working
@@ -25,14 +28,15 @@ final class VerificationSession {
     private(set) var startedAt = Date()
     private(set) var escalating = false
 
+    /// Speak-mode live coverage: which verse words have been heard.
+    private(set) var coverage: VerseCoverage?
+
     /// Guidance line for the scan overlay, escalating with attempts/time.
     private(set) var guidance = "Point at the page"
     /// Show the "Type it instead" switch (attempt 4+).
     private(set) var offersTypeSwitch = false
     /// Show "I'll take your word for it" (attempt 5+ or 45s of failures).
     private(set) var offersEscapeHatch = false
-    /// Demo-only soft pass message.
-    private(set) var demoAutoPassed = false
 
     private var matcher: LocalMatcher
     private let escalator = GeminiEscalator()
@@ -40,10 +44,17 @@ final class VerificationSession {
 
     var onPassed: ((_ usedEscapeHatch: Bool) -> Void)?
 
-    init(target: VerseRef, anchors: VerseAnchors, mode: VerifyMode, isDemo: Bool = false) {
+    init(
+        target: VerseRef,
+        anchors: VerseAnchors,
+        mode: VerifyMode,
+        verseText: String = "",
+        isDemo: Bool = false
+    ) {
         self.target = target
         self.anchors = anchors
         self.mode = mode
+        self.verseText = verseText
         self.isDemo = isDemo
         self.verseTokens = LocalMatcher.verseTokens(for: target)
         switch mode {
@@ -54,6 +65,9 @@ final class VerificationSession {
         case .type:
             self.matcher = LocalMatcher()
         }
+        if mode == .speak {
+            coverage = VerseCoverage.evaluate(candidate: "", verseText: verseText)
+        }
     }
 
     // MARK: - Scan / speak text evaluation
@@ -62,6 +76,25 @@ final class VerificationSession {
     @discardableResult
     func evaluate(text: String) -> Bool {
         guard case .working = stage else { return true }
+
+        // Speak: the whole verse, word by word, to 100%. No partial credit.
+        if mode == .speak {
+            let result = VerseCoverage.evaluate(candidate: text, verseText: verseText)
+            // Coverage never regresses — recognizers rewrite their partials,
+            // and a word once heard stays lit.
+            if let existing = coverage, existing.matchedCount > result.matchedCount {
+                let merged = zip(existing.matched, result.matched).map { $0 || $1 }
+                coverage = VerseCoverage(matched: merged)
+            } else {
+                coverage = result
+            }
+            if coverage?.complete == true {
+                pass(escapeHatch: false)
+                return true
+            }
+            return false
+        }
+
         let result = matcher.evaluate(
             rawText: text, target: target, anchors: anchors, verseTokens: verseTokens)
 
@@ -93,16 +126,12 @@ final class VerificationSession {
     // MARK: - Attempts & escape hatch
 
     /// Record a failed capture attempt (no match after a sustained try).
+    /// The demo gets no invisible auto-pass: the mechanic must be real, or
+    /// the belief it builds is fake. A visible skip appears late instead.
     func recordFailedAttempt() {
         guard case .working = stage else { return }
         failedAttempts += 1
         KoumHaptics.verificationFailed()
-
-        if isDemo, failedAttempts >= 2 {
-            demoAutoPassed = true
-            pass(escapeHatch: false)
-            return
-        }
         updateGuidance()
     }
 

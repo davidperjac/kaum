@@ -1,8 +1,9 @@
 import Combine
 import SwiftUI
 
-/// Speak mode: the verse stays on screen; the user reads it aloud. Passes on
-/// partial results the moment the transcript clears the threshold.
+/// Speak mode: the verse stays on screen; the user reads it aloud, and every
+/// word lights up as it is heard. The alarm ends when the whole verse has
+/// been spoken — all of it, not most of it.
 struct SpeakView: View {
     @Bindable var session: MorningSession
     @Bindable var verification: VerificationSession
@@ -17,12 +18,17 @@ struct SpeakView: View {
             VStack(spacing: 0) {
                 Spacer(minLength: KoumSpacing.xl)
 
-                VerseBlock(
-                    reference: session.verse.display,
-                    text: session.verseText,
-                    hero: true,
-                    referenceColor: KoumColor.firstlight
-                )
+                VStack(alignment: .leading, spacing: KoumSpacing.md) {
+                    MicroLabel(text: session.verse.display, color: KoumColor.firstlight)
+                    if let coverage = verification.coverage {
+                        CoverageVerseText(
+                            text: session.verseText,
+                            matched: coverage.matched,
+                            hero: session.verseText.count <= 150
+                        )
+                        CoverageProgressLabel(coverage: coverage)
+                    }
+                }
                 .padding(.horizontal, KoumSpacing.margin)
 
                 Spacer()
@@ -39,18 +45,9 @@ struct SpeakView: View {
                             .symbolEffect(.variableColor.iterative, isActive: speaker.listening)
                     }
 
-                    Text(speaker.listening ? "Read it out loud" : "Starting the microphone…")
+                    Text(speaker.listening ? "Read the whole verse out loud" : "Starting the microphone…")
                         .font(KoumType.body)
                         .foregroundStyle(KoumColor.boneMuted)
-
-                    if !speaker.transcript.isEmpty {
-                        Text(speaker.transcript)
-                            .font(KoumType.caption)
-                            .foregroundStyle(KoumColor.boneFaint)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, KoumSpacing.margin)
-                    }
 
                     Text("Your voice stays on your phone.")
                         .font(KoumType.micro)
@@ -74,7 +71,7 @@ struct SpeakView: View {
                             .buttonStyle(.koumGhost)
                     }
                     if verification.offersEscapeHatch {
-                        Button("I'll take your word for it") {
+                        Button(verification.isDemo ? "Skip for now" : "I'll take your word for it") {
                             verification.useEscapeHatch()
                         }
                         .buttonStyle(.koumGhost)

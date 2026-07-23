@@ -61,7 +61,14 @@ struct RootView: View {
 
     private var mainBody: some View {
         ZStack {
-            if let session = app.morningSession {
+            // The splash *replaces* the routed content rather than covering
+            // it — otherwise the first onboarding screen mounts underneath,
+            // plays its line-by-line reveal unseen, and appears all at once.
+            if showSplash {
+                KoumColor.night.ignoresSafeArea()
+                SplashView { splashDone = true }
+                    .transition(.opacity)
+            } else if let session = app.morningSession {
                 // Highest priority: a morning in progress. Never gated.
                 MorningFlowView(session: session)
                     .transition(.opacity)
@@ -82,11 +89,7 @@ struct RootView: View {
             }
         }
         .animation(KoumMotion.gentleEase, value: route)
-        .overlay {
-            if showSplash {
-                SplashView { splashDone = true }
-            }
-        }
+        .animation(KoumMotion.gentleEase, value: showSplash)
         .task {
             AlarmService.shared.startObserving()
             AlarmService.shared.refreshAuthState()
