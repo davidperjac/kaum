@@ -9,7 +9,7 @@ enum KoumConfig {
     /// RevenueCat public SDK key (starts with `appl_`). Empty string disables
     /// RevenueCat configuration; the app then treats the user as subscribed in
     /// DEBUG and unsubscribed in Release.
-    static let revenueCatAPIKey = ""
+    static let revenueCatAPIKey = "appl_qRlVEgbJmEwWHAPJURjKrxafPTt"
 
     /// The single entitlement every paid product unlocks.
     static let entitlementID = "koum_pro"
