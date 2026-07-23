@@ -134,7 +134,7 @@ enum OnboardingVoice {
         if blockers.contains("I grab my phone first") {
             return (["The phone wins because\nit asks first.",
                      "Tomorrow, the first thing\nasking for you\nwill be Scripture."],
-                    "I'd rather it be Him")
+                    "I'd rather it be the Lord")
         }
         if blockers.contains("I run out of time") {
             return (["Morning time isn't found.", "It's kept —\nbefore anything else\ncan claim it."],

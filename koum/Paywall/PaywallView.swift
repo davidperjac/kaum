@@ -1,9 +1,10 @@
 import RevenueCat
 import SwiftUI
 
-/// The paywall. Always dark. Calm, plain, confident — no countdown timers, no
-/// fake discounts, no manufactured urgency of any kind. Yearly pre-selected;
-/// weekly present but quiet.
+/// The paywall. Always dark, calm, confident — no countdown timers, no fake
+/// urgency. A living dawn sits at the top; the ask is personal; every word
+/// about a free trial is driven by the actual product offer. No offer, no
+/// trial language.
 struct PaywallView: View {
     @Environment(SubscriptionManager.self) private var subscriptions
     @Environment(AppModel.self) private var app
@@ -16,21 +17,21 @@ struct PaywallView: View {
     @State private var closeVisible = false
     @State private var purchasing = false
     @State private var errorMessage: String?
+    @State private var heroGlow = false
     /// Hard paywall: closing is only offered after a beat, and it exits to a
-    /// reduced "come back tonight" state rather than the app.
+    /// reduced state rather than the app.
     var onClose: (() -> Void)?
+
+    private var trialDays: Int? { subscriptions.yearlyTrialDays }
 
     var body: some View {
         ZStack {
             KoumColor.night.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                header
-
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        headline
-                        features
+                        hero
                         packages
                     }
                     .padding(.horizontal, KoumSpacing.margin)
@@ -64,6 +65,9 @@ struct PaywallView: View {
         .preferredColorScheme(.dark)
         .task {
             await subscriptions.loadOffering()
+            withAnimation(.easeInOut(duration: 5).repeatForever(autoreverses: true)) {
+                heroGlow = true
+            }
             try? await Task.sleep(for: .seconds(3))
             withAnimation(KoumMotion.gentleEase) { closeVisible = true }
         }
@@ -75,81 +79,55 @@ struct PaywallView: View {
         }
     }
 
-    private var header: some View {
-        Color.clear.frame(height: KoumSpacing.xl)
-    }
+    // MARK: - Hero: a living dawn above the ask
 
-    private var headline: some View {
-        VStack(alignment: .leading, spacing: KoumSpacing.sm) {
-            Text(app.userName.isEmpty
-                 ? "Start tomorrow morning."
-                 : "\(app.userName), start\ntomorrow morning.")
-                .font(KoumType.display)
-                .koumLineSpacing(6)
-                .foregroundStyle(KoumColor.bone)
-            if !app.onboardingMotivation.isEmpty {
-                Text("You said you wanted to feel \(app.onboardingMotivation.lowercased()). This is how that starts.")
-                    .font(KoumType.body)
-                    .foregroundStyle(KoumColor.boneMuted)
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // The mark, glowing gently
+            ZStack {
+                RadialGradient(
+                    colors: [
+                        KoumColor.firstlight.opacity(heroGlow ? 0.28 : 0.14),
+                        KoumColor.firstlight.opacity(0),
+                    ],
+                    center: .center, startRadius: 0, endRadius: 90
+                )
+                .frame(height: 130)
+                GlyphView(glyph: .sunrise, size: 44)
             }
-        }
-        .padding(.bottom, KoumSpacing.xl)
-    }
+            .frame(maxWidth: .infinity)
+            .padding(.top, KoumSpacing.md)
 
-    private var features: some View {
-        VStack(alignment: .leading, spacing: KoumSpacing.md) {
-            featureRow("Alarm that rings through Silent")
-            featureRow("Scan, speak, or type to dismiss")
-            featureRow("A short devotional every morning")
-            featureRow("Prayer log & journal")
-            featureRow("Streaks that forgive a bad day")
-        }
-        .padding(.bottom, KoumSpacing.xl)
-    }
-
-    private func featureRow(_ text: String) -> some View {
-        HStack(spacing: KoumSpacing.md) {
-            GlyphView(glyph: .check, size: 13, color: KoumColor.verified)
-            Text(text)
-                .font(KoumType.body)
+            Text(app.userName.isEmpty
+                 ? "Tomorrow morning,\neverything changes."
+                 : "\(app.userName), tomorrow\nmorning changes.")
+                .font(KoumType.display)
+                .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+                .padding(.top, KoumSpacing.sm)
+
+            Text(app.onboardingMotivation.isEmpty
+                 ? "An alarm your Bible turns off. A verse, a prayer, a line — under four minutes."
+                 : "You said you wanted to feel \(app.onboardingMotivation). It starts with one kept morning.")
+                .font(KoumType.body)
+                .koumLineSpacing(5)
+                .foregroundStyle(KoumColor.boneMuted)
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+                .padding(.top, KoumSpacing.sm)
+                .padding(.bottom, KoumSpacing.xl)
         }
     }
 
     // MARK: - Packages
 
-    private var yearlyPackage: Package? {
-        subscriptions.currentOffering?.availablePackages.first {
-            $0.storeProduct.productIdentifier == KoumConfig.yearlyProductID
-        } ?? subscriptions.currentOffering?.annual
-    }
+    private var yearlyPackage: Package? { subscriptions.yearlyPackage }
+    private var weeklyPackage: Package? { subscriptions.weeklyPackage }
 
-    private var weeklyPackage: Package? {
-        subscriptions.currentOffering?.availablePackages.first {
-            $0.storeProduct.productIdentifier == KoumConfig.weeklyProductID
-        } ?? subscriptions.currentOffering?.weekly
-    }
-
-    private var packages: some View {
-        VStack(spacing: KoumSpacing.md) {
-            packageCard(
-                title: "Yearly",
-                price: yearlyPackage?.localizedPriceString ?? "$29.99/yr",
-                detail: "7 days free, then \(yearlyPackage?.localizedPriceString ?? "$29.99")/year — \(monthlyEquivalent)/month",
-                badge: "Best value",
-                selected: selectedYearly
-            ) { selectedYearly = true }
-
-            packageCard(
-                title: "Weekly",
-                price: weeklyPackage?.localizedPriceString ?? "$3.99/wk",
-                detail: "\(weeklyPackage?.localizedPriceString ?? "$3.99") per week, billed weekly",
-                badge: nil,
-                selected: !selectedYearly
-            ) { selectedYearly = false }
-        }
-        .padding(.bottom, KoumSpacing.lg)
-    }
+    private var yearlyPrice: String { yearlyPackage?.localizedPriceString ?? "$29.99" }
+    private var weeklyPrice: String { weeklyPackage?.localizedPriceString ?? "$3.99" }
 
     private var monthlyEquivalent: String {
         guard let yearly = yearlyPackage?.storeProduct.price else { return "$2.50" }
@@ -160,29 +138,61 @@ struct PaywallView: View {
         return formatter.string(from: NSNumber(value: monthly)) ?? "$2.50"
     }
 
+    private var packages: some View {
+        VStack(spacing: KoumSpacing.md) {
+            packageCard(
+                title: "Yearly",
+                priceLine: "\(yearlyPrice) per year",
+                subLine: "\(monthlyEquivalent)/month, billed once",
+                badge: trialDays.map { "\($0) days free" } ?? "Best value",
+                selected: selectedYearly
+            ) { selectedYearly = true }
+
+            packageCard(
+                title: "Weekly",
+                priceLine: "\(weeklyPrice) per week",
+                subLine: "Billed weekly, cancel anytime",
+                badge: nil,
+                selected: !selectedYearly
+            ) { selectedYearly = false }
+        }
+        .padding(.bottom, KoumSpacing.md)
+    }
+
     private func packageCard(
-        title: String, price: String, detail: String, badge: String?,
+        title: String, priceLine: String, subLine: String, badge: String?,
         selected: Bool, action: @escaping () -> Void
     ) -> some View {
         Button {
             KoumHaptics.selection()
             action()
         } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: KoumSpacing.xs) {
-                    Text(title)
-                        .font(KoumType.label)
+            HStack(spacing: KoumSpacing.md) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: KoumSpacing.sm) {
+                        Text(title)
+                            .font(KoumType.label)
+                            .foregroundStyle(KoumColor.bone)
+                        if let badge {
+                            Text(badge.uppercased())
+                                .font(KoumType.micro)
+                                .kerning(1.1)
+                                .foregroundStyle(KoumColor.night)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Capsule().fill(KoumColor.firstlight))
+                        }
+                    }
+                    Text(priceLine)
+                        .font(KoumType.smallLabel)
                         .foregroundStyle(KoumColor.bone)
-                    Text(detail)
+                    Text(subLine)
                         .font(KoumType.caption)
                         .foregroundStyle(KoumColor.boneMuted)
                 }
                 Spacer()
-                if let badge {
-                    MicroLabel(text: badge, color: KoumColor.firstlight)
-                        .padding(.trailing, KoumSpacing.sm)
-                }
                 Image(systemName: selected ? "circle.inset.filled" : "circle")
+                    .font(.system(size: 22))
                     .foregroundStyle(selected ? KoumColor.firstlight : KoumColor.boneFaint)
             }
             .padding(KoumSpacing.md + KoumSpacing.xs)
@@ -191,37 +201,44 @@ struct PaywallView: View {
                     .fill(KoumColor.nightRaised)
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(selected ? KoumColor.firstlight : KoumColor.nightEdge, lineWidth: 1)
+                            .stroke(selected ? KoumColor.firstlight : KoumColor.nightEdge,
+                                    lineWidth: selected ? 1.5 : 1)
                     )
+                    .shadow(color: selected ? KoumColor.firstlight.opacity(0.18) : .clear,
+                            radius: 18, y: 4)
             )
         }
         .buttonStyle(.plain)
+        .animation(KoumMotion.quickEase, value: selected)
     }
 
-    // MARK: - Footer
+    // MARK: - Footer: the ask, plainly
+
+    private var ctaLabel: String {
+        if purchasing { return "One moment…" }
+        if selectedYearly, let trialDays { return "Start my \(trialDays)-day free trial" }
+        return "Continue"
+    }
+
+    private var reassurance: String {
+        if selectedYearly {
+            if let trialDays {
+                return "Free for \(trialDays) days, then \(yearlyPrice)/year. Cancel anytime."
+            }
+            return "\(yearlyPrice) per year. Cancel anytime."
+        }
+        return "\(weeklyPrice) per week. Cancel anytime."
+    }
 
     private var footer: some View {
         VStack(spacing: KoumSpacing.sm) {
-            Button(purchasing ? "One moment…" : (selectedYearly ? "Start free" : "Subscribe")) {
-                purchase()
-            }
-            .buttonStyle(.koumPrimary)
-            .disabled(purchasing)
+            Button(ctaLabel) { purchase() }
+                .buttonStyle(.koumPrimary)
+                .disabled(purchasing)
 
-            if selectedYearly {
-                HStack(spacing: KoumSpacing.xs) {
-                    trialStep("Today", "full access")
-                    trialDot
-                    trialStep("Day 5", "we remind you")
-                    trialDot
-                    trialStep("Day 7", "trial ends")
-                }
-                .frame(maxWidth: .infinity)
-            } else {
-                Text("Cancel anytime.")
-                    .font(KoumType.caption)
-                    .foregroundStyle(KoumColor.boneMuted)
-            }
+            Text(reassurance)
+                .font(KoumType.caption)
+                .foregroundStyle(KoumColor.boneMuted)
 
             Text("Your prayers and journal stay on your phone.")
                 .font(KoumType.micro)
@@ -239,33 +256,23 @@ struct PaywallView: View {
             }
             .font(KoumType.micro)
             .foregroundStyle(KoumColor.boneFaint)
+            .padding(.top, 2)
 
-            Text("Payment is charged to your Apple ID at confirmation. Subscription renews automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your Apple ID settings.")
+            Text("Payment is charged to your Apple ID at confirmation. Subscriptions renew automatically unless cancelled at least 24 hours before the period ends. Manage in Apple ID settings.")
                 .font(.system(size: 9))
-                .foregroundStyle(KoumColor.boneFaint.opacity(0.8))
+                .foregroundStyle(KoumColor.boneFaint.opacity(0.7))
                 .multilineTextAlignment(.center)
-                .padding(.top, KoumSpacing.xs)
         }
         .padding(.horizontal, KoumSpacing.margin)
+        .padding(.top, KoumSpacing.sm)
         .padding(.bottom, KoumSpacing.sm)
-    }
-
-    private func trialStep(_ day: String, _ detail: String) -> some View {
-        VStack(spacing: 1) {
-            Text(day)
-                .font(KoumType.caption)
-                .foregroundStyle(KoumColor.bone)
-            Text(detail)
-                .font(KoumType.micro)
-                .foregroundStyle(KoumColor.boneFaint)
-        }
-    }
-
-    private var trialDot: some View {
-        Circle()
-            .fill(KoumColor.nightEdge)
-            .frame(width: 3, height: 3)
-            .padding(.horizontal, KoumSpacing.xs)
+        .background(
+            LinearGradient(
+                colors: [KoumColor.night.opacity(0), KoumColor.night, KoumColor.night],
+                startPoint: .top, endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
     }
 
     private func purchase() {
@@ -284,7 +291,7 @@ struct PaywallView: View {
             do {
                 try await subscriptions.purchase(package)
                 if subscriptions.isSubscribed {
-                    NotificationService.scheduleTrialReminders()
+                    NotificationService.scheduleTrialReminders(trialDays: trialDays)
                     onUnlocked()
                 }
             } catch {

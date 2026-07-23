@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Line-by-line statement screen
 
 /// Type appears line by line at BREATH intervals — pacing that forces the
-/// reader to slow down. No logo, no imagery; type only.
+/// reader to slow down. Centered, ceremonial; no imagery.
 struct OnboardingStatement: View {
     let lines: [String]
     let button: String
@@ -17,18 +17,19 @@ struct OnboardingStatement: View {
         VStack(spacing: 0) {
             Spacer()
 
-            VStack(alignment: .leading, spacing: KoumSpacing.lg) {
+            VStack(spacing: KoumSpacing.lg) {
                 ForEach(lines.indices, id: \.self) { idx in
                     Text(lines[idx])
                         .font(KoumType.display)
-                        .koumLineSpacing(6)
+                        .koumLineSpacing(7)
                         .foregroundStyle(KoumColor.bone)
+                        .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                         .opacity(idx < visibleLines ? 1 : 0)
                         .offset(y: idx < visibleLines ? 0 : 4)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, KoumSpacing.margin)
 
             Spacer()
@@ -61,7 +62,7 @@ struct OnboardingStatement: View {
     }
 }
 
-// MARK: - Single choice
+// MARK: - Single choice (explicit Continue — no auto-advance, ever)
 
 struct OnboardingChoice: View {
     let question: String
@@ -71,13 +72,12 @@ struct OnboardingChoice: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: KoumSpacing.xxl)
-
             Text(question)
                 .font(KoumType.display)
-                .koumLineSpacing(6)
+                .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, KoumSpacing.xxl)
                 .padding(.bottom, KoumSpacing.xl)
 
             VStack(spacing: KoumSpacing.sm) {
@@ -88,16 +88,20 @@ struct OnboardingChoice: View {
                         multi: false
                     ) {
                         selection = option
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                            onContinue()
-                        }
                     }
                 }
             }
 
             Spacer()
+
+            Button("Continue", action: onContinue)
+                .buttonStyle(.koumPrimary)
+                .disabled(selection.isEmpty)
+                .opacity(selection.isEmpty ? 0.4 : 1)
+                .padding(.bottom, KoumSpacing.lg)
         }
         .padding(.horizontal, KoumSpacing.margin)
+        .animation(KoumMotion.quickEase, value: selection)
     }
 }
 
@@ -112,12 +116,11 @@ struct OnboardingMultiChoice: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: KoumSpacing.xxl)
-
             Text(question)
                 .font(KoumType.display)
-                .koumLineSpacing(6)
+                .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
+                .padding(.top, KoumSpacing.xxl)
                 .padding(.bottom, KoumSpacing.xs)
 
             Text(hint)
@@ -150,6 +153,7 @@ struct OnboardingMultiChoice: View {
                 .opacity(selection.isEmpty ? 0.4 : 1)
         }
         .padding(.horizontal, KoumSpacing.margin)
+        .animation(KoumMotion.quickEase, value: selection)
     }
 }
 
@@ -189,7 +193,7 @@ struct OnboardingOptionRow: View {
     }
 }
 
-// MARK: - Screen 8: mode choice
+// MARK: - Mode choice (explicit Continue)
 
 struct ModeChoiceScreen: View {
     @Binding var selection: VerifyMode
@@ -197,12 +201,11 @@ struct ModeChoiceScreen: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: KoumSpacing.xxl)
-
             Text("How do you want\nto turn it off?")
                 .font(KoumType.display)
-                .koumLineSpacing(6)
+                .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
+                .padding(.top, KoumSpacing.xxl)
                 .padding(.bottom, KoumSpacing.xl)
 
             VStack(spacing: KoumSpacing.sm) {
@@ -210,9 +213,6 @@ struct ModeChoiceScreen: View {
                     Button {
                         KoumHaptics.selection()
                         selection = mode
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                            onContinue()
-                        }
                     } label: {
                         HStack(spacing: KoumSpacing.md) {
                             GlyphView(glyph: mode.glyph, size: 24)
@@ -226,6 +226,8 @@ struct ModeChoiceScreen: View {
                                     .foregroundStyle(KoumColor.boneMuted)
                             }
                             Spacer()
+                            Image(systemName: selection == mode ? "circle.inset.filled" : "circle")
+                                .foregroundStyle(selection == mode ? KoumColor.firstlight : KoumColor.boneFaint)
                         }
                         .padding(KoumSpacing.md)
                         .background(
@@ -241,19 +243,24 @@ struct ModeChoiceScreen: View {
                 }
             }
 
-            Text("You can change this anytime.")
+            Text("You can change this anytime — even mid-alarm.")
                 .font(KoumType.caption)
                 .foregroundStyle(KoumColor.boneFaint)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, KoumSpacing.md)
 
             Spacer()
+
+            Button("Continue", action: onContinue)
+                .buttonStyle(.koumPrimary)
+                .padding(.bottom, KoumSpacing.lg)
         }
         .padding(.horizontal, KoumSpacing.margin)
+        .animation(KoumMotion.quickEase, value: selection)
     }
 }
 
-// MARK: - Screen 9: time
+// MARK: - Time
 
 struct TimeScreen: View {
     @Binding var time: Date
@@ -261,13 +268,12 @@ struct TimeScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: KoumSpacing.xxl)
-
             Text("What time do you\nwant to be up?")
                 .font(KoumType.display)
-                .koumLineSpacing(6)
+                .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
                 .multilineTextAlignment(.center)
+                .padding(.top, KoumSpacing.xxl)
                 .padding(.bottom, KoumSpacing.xl)
 
             DatePicker("Wake time", selection: $time, displayedComponents: .hourAndMinute)
@@ -285,7 +291,7 @@ struct TimeScreen: View {
     }
 }
 
-// MARK: - Screen 10: days
+// MARK: - Days
 
 struct DaysScreen: View {
     @Binding var days: Set<Int>
@@ -295,11 +301,10 @@ struct DaysScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: KoumSpacing.xxl)
-
             Text("Which mornings?")
                 .font(KoumType.display)
                 .foregroundStyle(KoumColor.bone)
+                .padding(.top, KoumSpacing.xxl)
                 .padding(.bottom, KoumSpacing.xl)
 
             HStack(spacing: KoumSpacing.sm) {
@@ -338,10 +343,11 @@ struct DaysScreen: View {
                 .opacity(days.isEmpty ? 0.4 : 1)
         }
         .padding(.horizontal, KoumSpacing.margin)
+        .animation(KoumMotion.quickEase, value: days)
     }
 }
 
-// MARK: - Screen 11: verse source
+// MARK: - Verse source (explicit Continue)
 
 struct VerseSourceScreen: View {
     @Binding var selection: VerseSource
@@ -349,19 +355,19 @@ struct VerseSourceScreen: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: KoumSpacing.xxl)
-
             Text("What do you want\nto read?")
                 .font(KoumType.display)
-                .koumLineSpacing(6)
+                .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
+                .padding(.top, KoumSpacing.xxl)
                 .padding(.bottom, KoumSpacing.xl)
 
             VStack(spacing: KoumSpacing.sm) {
                 sourceRow(.koumPlan, title: "Koum's plan",
                           subtitle: "A verse a day, chosen for mornings")
                 ForEach(["Psalms", "Proverbs", "John", "Romans"], id: \.self) { book in
-                    sourceRow(.readingPlan(book: book), title: book, subtitle: nil)
+                    sourceRow(.readingPlan(book: book), title: book,
+                              subtitle: "Read through, morning by morning")
                 }
             }
 
@@ -372,15 +378,19 @@ struct VerseSourceScreen: View {
                 .padding(.top, KoumSpacing.md)
 
             Spacer()
+
+            Button("Continue", action: onContinue)
+                .buttonStyle(.koumPrimary)
+                .padding(.bottom, KoumSpacing.lg)
         }
         .padding(.horizontal, KoumSpacing.margin)
+        .animation(KoumMotion.quickEase, value: selection)
     }
 
     private func sourceRow(_ source: VerseSource, title: String, subtitle: String?) -> some View {
         Button {
             KoumHaptics.selection()
             selection = source
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { onContinue() }
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -401,13 +411,17 @@ struct VerseSourceScreen: View {
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(KoumColor.nightRaised)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(selection == source ? KoumColor.firstlight : .clear, lineWidth: 1)
+                    )
             )
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Screen 12: alarm permission
+// MARK: - Alarm permission
 
 struct AlarmPermissionScreen: View {
     @Binding var denied: Bool
@@ -473,7 +487,7 @@ struct AlarmPermissionScreen: View {
     }
 }
 
-// MARK: - Screen 13: summary
+// MARK: - Summary / the pact
 
 struct SummaryScreen: View {
     var name: String = ""
@@ -486,12 +500,11 @@ struct SummaryScreen: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: KoumSpacing.xxl)
-
             Text(name.isEmpty ? "Here's your morning." : "\(name), here's\nyour morning.")
                 .font(KoumType.display)
-                .koumLineSpacing(6)
+                .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
+                .padding(.top, KoumSpacing.xxl)
                 .padding(.bottom, KoumSpacing.xl)
 
             VStack(alignment: .leading, spacing: KoumSpacing.xs) {
@@ -556,10 +569,12 @@ struct SummaryScreen: View {
     }
 }
 
-// MARK: - Screen 16: confirmation
+// MARK: - Confirmation
 
 struct ConfirmationScreen: View {
     let time: Date
+    /// nil = no free trial configured; no trial language shown.
+    var trialDays: Int? = nil
     let onDone: () -> Void
 
     var body: some View {
@@ -575,7 +590,7 @@ struct ConfirmationScreen: View {
 
             Text("You're set for\n\(time.formatted(date: .omitted, time: .shortened)) tomorrow.")
                 .font(KoumType.display)
-                .koumLineSpacing(6)
+                .koumLineSpacing(7)
                 .foregroundStyle(KoumColor.bone)
                 .multilineTextAlignment(.center)
                 .padding(.bottom, KoumSpacing.xl)
@@ -587,10 +602,12 @@ struct ConfirmationScreen: View {
                 .multilineTextAlignment(.center)
                 .padding(.bottom, KoumSpacing.xl)
 
-            Text("We'll remind you on day 5,\nbefore the trial ends.")
-                .font(KoumType.caption)
-                .foregroundStyle(KoumColor.boneFaint)
-                .multilineTextAlignment(.center)
+            if let trialDays, trialDays > 1 {
+                Text("We'll remind you on day \(trialDays - 1),\nbefore your trial ends.")
+                    .font(KoumType.caption)
+                    .foregroundStyle(KoumColor.boneFaint)
+                    .multilineTextAlignment(.center)
+            }
 
             Spacer()
 

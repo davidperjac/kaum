@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
-@testable import koum
+@testable import Koum
 
 @Suite @MainActor struct StreakTests {
 

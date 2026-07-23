@@ -13,39 +13,30 @@ enum NotificationService {
         _ = try? await center.requestAuthorization(options: [.alert, .sound])
     }
 
-    /// Day 3 and day 5 trial messages — as promised on the confirmation
-    /// screen, honestly.
-    static func scheduleTrialReminders() {
+    /// One honest reminder the day before the trial ends — exactly as
+    /// promised on the confirmation screen. No-op for trials of 1 day or
+    /// none at all.
+    static func scheduleTrialReminders(trialDays: Int?) {
+        guard let trialDays, trialDays > 1 else { return }
         Task {
             await requestPermissionIfNeeded()
             let center = UNUserNotificationCenter.current()
 
-            let day3 = UNMutableNotificationContent()
-            day3.title = "Three mornings"
-            day3.body = "That's the hard part done."
-            day3.sound = .default
+            let reminder = UNMutableNotificationContent()
+            reminder.title = "Your trial ends tomorrow"
+            reminder.body = "You've had \(trialDays - 1) \(trialDays - 1 == 1 ? "morning" : "mornings") with God. To keep going, nothing to do — it renews on its own. If not, cancel in Settings, no hard feelings."
+            reminder.sound = .default
             try? await center.add(UNNotificationRequest(
-                identifier: "trial.day3",
-                content: day3,
+                identifier: "trial.reminder",
+                content: reminder,
                 trigger: UNTimeIntervalNotificationTrigger(
-                    timeInterval: 3 * 24 * 3600, repeats: false)
-            ))
-
-            let day5 = UNMutableNotificationContent()
-            day5.title = "Your trial ends in two days"
-            day5.body = "You've had 5 mornings with God. If you want to keep going, nothing to do — it renews on its own. If not, cancel in Settings, no hard feelings."
-            day5.sound = .default
-            try? await center.add(UNNotificationRequest(
-                identifier: "trial.day5",
-                content: day5,
-                trigger: UNTimeIntervalNotificationTrigger(
-                    timeInterval: 5 * 24 * 3600, repeats: false)
+                    timeInterval: Double(trialDays - 1) * 24 * 3600, repeats: false)
             ))
         }
     }
 
     static func cancelTrialReminders() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(
-            withIdentifiers: ["trial.day3", "trial.day5"])
+            withIdentifiers: ["trial.reminder", "trial.day3", "trial.day5"])
     }
 }

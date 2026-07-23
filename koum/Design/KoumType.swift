@@ -2,18 +2,21 @@ import SwiftUI
 
 /// Koum typography.
 ///
-/// The split is semantic, not aesthetic: **serif (Newsreader) is the voice of
+/// The split is semantic, not aesthetic: **serif (Fraunces) is the voice of
 /// Scripture; sans (Inter) is the voice of the app.** They never trade roles.
 ///
-/// All styles scale with Dynamic Type relative to their natural text style.
+/// Fraunces carries real warmth at display sizes — hand-set, not default.
+/// Inter runs heavier than typical (SemiBold buttons) so nothing reads thin
+/// on a dark screen at 6am. All styles scale with Dynamic Type.
 enum KoumType {
 
-    // MARK: Font family names (PostScript families as bundled)
+    // MARK: Font family names (PostScript names as bundled)
 
-    private static let serifRegular = "Newsreader-Regular"
-    private static let serifMedium = "Newsreader-Medium"
-    private static let serifLight = "Newsreader-Light"
-    private static let serifItalic = "Newsreader-Italic"
+    private static let serifRegular = "Fraunces-Regular"
+    private static let serifMedium = "Fraunces-Medium"
+    private static let serifSemiBold = "Fraunces-SemiBold"
+    private static let serifLight = "Fraunces-Light"
+    private static let serifItalic = "Fraunces-Italic"
     private static let sansRegular = "Inter-Regular"
     private static let sansMedium = "Inter-Medium"
     private static let sansSemiBold = "Inter-SemiBold"
@@ -26,38 +29,44 @@ enum KoumType {
     /// Verse within the flow. 26/38.
     static let verse = Font.custom(serifRegular, size: 26, relativeTo: .title)
 
-    /// Screen headlines. 30/36.
-    static let display = Font.custom(serifMedium, size: 30, relativeTo: .largeTitle)
+    /// Screen headlines. 31/38.
+    static let display = Font.custom(serifSemiBold, size: 31, relativeTo: .largeTitle)
 
     /// Section heads. 22/28.
     static let title = Font.custom(serifMedium, size: 22, relativeTo: .title2)
 
-    /// Devotional body. 18/30. Scripture is never below 18pt.
-    static let devotional = Font.custom(serifRegular, size: 18, relativeTo: .body)
+    /// Devotional body. 19/31. Scripture is never below 18pt.
+    static let devotional = Font.custom(serifRegular, size: 19, relativeTo: .body)
 
     /// Devotional body, italic (for quoted Scripture inside prose).
-    static let devotionalItalic = Font.custom(serifItalic, size: 18, relativeTo: .body)
+    static let devotionalItalic = Font.custom(serifItalic, size: 19, relativeTo: .body)
 
     /// UI text. 16/24.
-    static let body = Font.custom(sansRegular, size: 16, relativeTo: .body)
+    static let body = Font.custom(sansMedium, size: 16, relativeTo: .body)
 
-    /// Buttons, labels. 14/20.
-    static let label = Font.custom(sansMedium, size: 14, relativeTo: .callout)
+    /// Buttons. 17 SemiBold — decisive, never thin.
+    static let label = Font.custom(sansSemiBold, size: 17, relativeTo: .body)
+
+    /// Secondary labels. 15/20.
+    static let smallLabel = Font.custom(sansMedium, size: 15, relativeTo: .callout)
 
     /// Metadata. 13/18.
-    static let caption = Font.custom(sansRegular, size: 13, relativeTo: .caption)
+    static let caption = Font.custom(sansMedium, size: 13, relativeTo: .caption)
 
     /// Eyebrows, ALL CAPS. 11/14, letterspaced.
-    static let micro = Font.custom(sansMedium, size: 11, relativeTo: .caption2)
+    static let micro = Font.custom(sansSemiBold, size: 11, relativeTo: .caption2)
 
     /// Alarm time. 72.
     static let clock = Font.custom(serifLight, size: 72, relativeTo: .largeTitle)
 
     /// Streak number. 48.
-    static let streak = Font.custom(serifMedium, size: 48, relativeTo: .largeTitle)
+    static let streak = Font.custom(serifSemiBold, size: 48, relativeTo: .largeTitle)
 
-    /// Wordmark: KOUM in Newsreader Medium, letterspaced by the caller.
-    static let wordmark = Font.custom(serifMedium, size: 24, relativeTo: .title2)
+    /// Wordmark: KOUM in Fraunces SemiBold, letterspaced by the caller.
+    static let wordmark = Font.custom(serifSemiBold, size: 24, relativeTo: .title2)
+
+    /// Splash verse — Fraunces at ceremony size.
+    static let splash = Font.custom(serifMedium, size: 30, relativeTo: .largeTitle)
 }
 
 // MARK: - Line spacing helpers

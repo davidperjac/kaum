@@ -11,6 +11,7 @@ enum KoumGlyph {
     case check
     case chevronRight
     case chevronDown
+    case sunrise
 }
 
 struct GlyphView: View {
@@ -34,7 +35,35 @@ struct GlyphView: View {
         case .check: AnyShape(CheckmarkShape())
         case .chevronRight: AnyShape(ChevronGlyph(down: false))
         case .chevronDown: AnyShape(ChevronGlyph(down: true))
+        case .sunrise: AnyShape(SunriseGlyph())
         }
+    }
+}
+
+/// Sunrise: the brand mark as a glyph — horizon line, rising dome, three rays.
+struct SunriseGlyph: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let w = rect.width, h = rect.height
+        let horizonY = h * 0.68
+        // Horizon
+        p.move(to: CGPoint(x: 0, y: horizonY))
+        p.addLine(to: CGPoint(x: w, y: horizonY))
+        // Dome
+        p.move(to: CGPoint(x: w * 0.26, y: horizonY))
+        p.addArc(
+            center: CGPoint(x: w * 0.5, y: horizonY),
+            radius: w * 0.24,
+            startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false
+        )
+        // Rays
+        p.move(to: CGPoint(x: w * 0.5, y: h * 0.3))
+        p.addLine(to: CGPoint(x: w * 0.5, y: h * 0.16))
+        p.move(to: CGPoint(x: w * 0.2, y: h * 0.42))
+        p.addLine(to: CGPoint(x: w * 0.11, y: h * 0.32))
+        p.move(to: CGPoint(x: w * 0.8, y: h * 0.42))
+        p.addLine(to: CGPoint(x: w * 0.89, y: h * 0.32))
+        return p
     }
 }
 

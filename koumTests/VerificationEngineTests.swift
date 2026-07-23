@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import koum
+@testable import Koum
 
 // MARK: - Normalizer
 

@@ -117,6 +117,20 @@ struct DebugPreviewHost: View {
                     motivation: "more grounded"
                 ) {} }
                 .preferredColorScheme(.dark)
+        case "splash":
+            SplashView {}
+        case "walkthrough":
+            ZStack { KoumColor.night.ignoresSafeArea()
+                WalkthroughScreen(page: .constant(1)) {} }
+                .preferredColorScheme(.dark)
+        case "beforepaywall":
+            ZStack { KoumColor.night.ignoresSafeArea()
+                BeforePaywallView(name: "David", motivation: "more grounded", trialDays: 3) {} }
+                .preferredColorScheme(.dark)
+        case "finale":
+            ZStack { KoumColor.night.ignoresSafeArea()
+                DemoFinaleView {} }
+                .preferredColorScheme(.dark)
         default:
             OnboardingFlow()
         }

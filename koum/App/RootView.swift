@@ -49,6 +49,16 @@ struct RootView: View {
         return .home
     }
 
+    /// Cold-launch splash. Skipped entirely when an alarm is waiting.
+    @State private var splashDone = false
+
+    private var showSplash: Bool {
+        !splashDone
+            && app.morningSession == nil
+            && launchState.pendingAlarmID == nil
+            && AlarmService.shared.alertingAlarmIDs.isEmpty
+    }
+
     private var mainBody: some View {
         ZStack {
             if let session = app.morningSession {
@@ -72,6 +82,11 @@ struct RootView: View {
             }
         }
         .animation(KoumMotion.gentleEase, value: route)
+        .overlay {
+            if showSplash {
+                SplashView { splashDone = true }
+            }
+        }
         .task {
             AlarmService.shared.startObserving()
             AlarmService.shared.refreshAuthState()

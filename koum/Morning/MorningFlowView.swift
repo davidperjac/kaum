@@ -33,8 +33,13 @@ struct MorningFlowView: View {
                 JournalView(session: session)
                     .transition(.koumStep)
             case .complete:
-                MorningCompleteView(session: session)
-                    .transition(.koumStep)
+                if session.isDemo {
+                    DemoFinaleView { session.finish() }
+                        .transition(.opacity)
+                } else {
+                    MorningCompleteView(session: session)
+                        .transition(.koumStep)
+                }
             }
         }
         .animation(KoumMotion.gentleEase, value: stepIndex)

@@ -102,13 +102,13 @@ ATTENTION      #A85248
 
 ### Faces
 
-**Display / Scripture — `Newsreader`**
-A contemporary serif with real character in the italics, designed for screen reading. Open, slightly warm, not a stiff Times-alike. Available on Google Fonts, free for commercial use.
+**Display / Scripture — `Fraunces`** *(revised from Newsreader, July 2026)*
+A warm, characterful "soft serif" with genuine personality at display sizes — feels hand-set rather than default. Available on Google Fonts, free for commercial use.
 
-Used for: verse text, screen headlines, devotional body, numbers on the alarm face.
+Used for: verse text, screen headlines, devotional body, numbers on the alarm face. Headlines run SemiBold for presence; verses stay Regular.
 
-**Interface — `Inter`**
-Neutral, superbly legible at small sizes, excellent at low brightness. Does the invisible work.
+**Interface — `Inter`** *(weights revised up, July 2026)*
+Neutral, superbly legible at small sizes, excellent at low brightness. Does the invisible work. Runs heavier than typical — buttons are 17pt SemiBold, body 16pt Medium — so nothing reads thin on a dark screen at 6am.
 
 Used for: buttons, labels, settings, navigation, captions, metadata.
 

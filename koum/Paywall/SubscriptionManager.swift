@@ -77,6 +77,43 @@ final class SubscriptionManager {
         Purchases.shared.attribution.setAttributes(attributes)
     }
 
+    // MARK: - Offering helpers
+
+    var yearlyPackage: Package? {
+        currentOffering?.availablePackages.first {
+            $0.storeProduct.productIdentifier == KoumConfig.yearlyProductID
+        } ?? currentOffering?.annual
+    }
+
+    var weeklyPackage: Package? {
+        currentOffering?.availablePackages.first {
+            $0.storeProduct.productIdentifier == KoumConfig.weeklyProductID
+        } ?? currentOffering?.weekly
+    }
+
+    /// Free-trial length (in days) on the yearly product, or nil when the
+    /// product carries no free-trial introductory offer. Every screen that
+    /// mentions a trial must key off this — no offer, no trial language.
+    var yearlyTrialDays: Int? {
+        guard isConfigured else {
+            #if DEBUG
+            return 3 // design-preview default in unconfigured dev builds
+            #else
+            return nil
+            #endif
+        }
+        guard let intro = yearlyPackage?.storeProduct.introductoryDiscount,
+              intro.paymentMode == .freeTrial else { return nil }
+        let period = intro.subscriptionPeriod
+        switch period.unit {
+        case .day: return period.value
+        case .week: return period.value * 7
+        case .month: return period.value * 30
+        case .year: return period.value * 365
+        @unknown default: return nil
+        }
+    }
+
     private func update(with info: CustomerInfo) {
         let entitlement = info.entitlements[KoumConfig.entitlementID]
         isSubscribed = entitlement?.isActive == true
