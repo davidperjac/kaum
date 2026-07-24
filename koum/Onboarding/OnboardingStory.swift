@@ -163,7 +163,9 @@ struct VerseInterstitial: View {
     let action: () -> Void
 
     @State private var stage = 0
-    @State private var highlighted = false
+    /// Characters swept by the highlighter so far, across all marks in
+    /// reading order.
+    @State private var sweptChars = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -209,28 +211,67 @@ struct VerseInterstitial: View {
         .onAppear { reveal() }
     }
 
-    /// The verse with its key words washed in first light. The wash arrives
-    /// a beat after the verse itself — read first, then see.
-    private var highlightedText: AttributedString {
-        var attributed = AttributedString(text)
-        guard highlighted else { return attributed }
+    /// Character ranges (offsets into `text`) the highlighter will cross, in
+    /// reading order — every occurrence of every keyword.
+    private var markRanges: [Range<Int>] {
+        var ranges: [Range<Int>] = []
         for keyword in keywords {
-            var searchStart = attributed.startIndex
-            while let range = attributed[searchStart...].range(
-                of: keyword, options: .caseInsensitive) {
-                // A real highlighter pass: bright gold, ink-dark word.
-                attributed[range].backgroundColor = KoumColor.firstlight.opacity(0.85)
-                attributed[range].foregroundColor = KoumColor.night
-                searchStart = range.upperBound
+            var search = text.startIndex
+            while let r = text.range(
+                of: keyword, options: .caseInsensitive, range: search..<text.endIndex) {
+                ranges.append(
+                    text.distance(from: text.startIndex, to: r.lowerBound)
+                    ..< text.distance(from: text.startIndex, to: r.upperBound))
+                search = r.upperBound
             }
         }
+        return ranges.sorted { $0.lowerBound < $1.lowerBound }
+    }
+
+    /// The verse with its key words washed in first light. The wash is drawn
+    /// like a hand would drag a highlighter: left to right across the first
+    /// word, a beat, then the next.
+    private var highlightedText: AttributedString {
+        var attributed = AttributedString(text)
+        var budget = sweptChars
+        for range in markRanges {
+            guard budget > 0 else { break }
+            let take = min(range.count, budget)
+            budget -= take
+            let chars = attributed.characters
+            let lower = chars.index(chars.startIndex, offsetBy: range.lowerBound)
+            let upper = chars.index(lower, offsetBy: take)
+            // A real highlighter pass: bright gold, ink-dark word.
+            attributed[lower..<upper].backgroundColor = KoumColor.firstlight.opacity(0.85)
+            attributed[lower..<upper].foregroundColor = KoumColor.night
+        }
         return attributed
+    }
+
+    /// Drag the highlighter across each mark, character by character, with a
+    /// lift of the pen between words.
+    private func sweepHighlights() {
+        let charStep = 0.045
+        let wordPause = 0.35
+        var t = 0.0
+        var count = 0
+        for range in markRanges {
+            for _ in 0..<range.count {
+                t += charStep
+                count += 1
+                let target = count
+                DispatchQueue.main.asyncAfter(deadline: .now() + t) {
+                    sweptChars = target
+                }
+            }
+            t += wordPause
+        }
     }
 
     private func reveal() {
         if reduceMotion {
             stage = 3
-            highlighted = true
+            sweptChars = markRanges.reduce(0) { $0 + $1.count }
             return
         }
         withAnimation(KoumMotion.breathEase) { stage = 1 }
@@ -238,7 +279,7 @@ struct VerseInterstitial: View {
             withAnimation(KoumMotion.breathEase) { stage = 2 }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + KoumMotion.breath * 2.2) {
-            withAnimation(.easeInOut(duration: 1.2)) { highlighted = true }
+            sweepHighlights()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + KoumMotion.breath * 2.6) {
             withAnimation(KoumMotion.breathEase) { stage = 3 }

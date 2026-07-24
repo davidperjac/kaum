@@ -15,6 +15,7 @@ final class SubscriptionManager {
     private(set) var isInTrial = false
     private(set) var trialEndsAt: Date?
     private(set) var currentOffering: Offering?
+    private(set) var allOfferings: Offerings?
     private(set) var lastError: String?
 
     /// True once RevenueCat is configured (a key is present).
@@ -55,6 +56,7 @@ final class SubscriptionManager {
         do {
             let offerings = try await Purchases.shared.offerings()
             currentOffering = offerings.current
+            allOfferings = offerings
         } catch {
             lastError = "Couldn't load plans. Check your connection."
         }
@@ -89,6 +91,14 @@ final class SubscriptionManager {
         currentOffering?.availablePackages.first {
             $0.storeProduct.productIdentifier == KoumConfig.weeklyProductID
         } ?? currentOffering?.weekly
+    }
+
+    /// The one-time exit offer, wherever it lives across offerings. Nil until
+    /// the promo product exists in App Store Connect + RevenueCat.
+    var promoYearlyPackage: Package? {
+        allOfferings?.all.values
+            .flatMap(\.availablePackages)
+            .first { $0.storeProduct.productIdentifier == KoumConfig.promoYearlyProductID }
     }
 
     /// Free-trial length (in days) on the yearly product, or nil when the

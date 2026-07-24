@@ -19,9 +19,10 @@ struct PaywallView: View {
     @State private var errorMessage: String?
     @State private var revealed = 0
     @State private var ctaGlow = false
-    /// Hard paywall: closing is only offered after a beat, and it exits to a
-    /// reduced state rather than the app.
-    var onClose: (() -> Void)?
+    /// The one-time exit offer. Once it has been seen and declined, the X
+    /// never comes back: the paywall is hard from then on.
+    @State private var showPromo = false
+    @State private var promoConsumed = PromoOffer.consumed
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -44,11 +45,14 @@ struct PaywallView: View {
                 footer
             }
 
-            if let onClose {
+            // The X lives on the right, and only until the one-time offer has
+            // been spent. Tapping it opens the offer, not the exit.
+            if !promoConsumed {
                 VStack {
                     HStack {
+                        Spacer()
                         Button {
-                            onClose()
+                            withAnimation(KoumMotion.gentleEase) { showPromo = true }
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 13, weight: .medium))
@@ -58,12 +62,26 @@ struct PaywallView: View {
                         }
                         .opacity(closeVisible ? 1 : 0)
                         .accessibilityLabel("Close")
-                        Spacer()
                     }
                     Spacer()
                 }
                 .padding(.top, KoumSpacing.sm)
-                .padding(.leading, KoumSpacing.sm)
+                .padding(.trailing, KoumSpacing.sm)
+            }
+
+            if showPromo {
+                PromoOfferView(
+                    onUnlocked: onUnlocked,
+                    onDecline: {
+                        PromoOffer.markConsumed()
+                        withAnimation(KoumMotion.gentleEase) {
+                            promoConsumed = true
+                            showPromo = false
+                        }
+                    }
+                )
+                .transition(.opacity)
+                .zIndex(1)
             }
         }
         .environment(\.koumTheme, KoumTheme(isDark: true))
@@ -127,11 +145,25 @@ struct PaywallView: View {
 
     private var hero: some View {
         VStack(spacing: 0) {
+            Image("AppIconArt")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 56, height: 56)
+                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .stroke(KoumColor.bone.opacity(0.14), lineWidth: 1)
+                )
+                .shadow(color: KoumColor.night.opacity(0.5), radius: 10, y: 3)
+                .padding(.top, KoumSpacing.xl)
+                .padding(.bottom, KoumSpacing.sm)
+                .opacity(revealed >= 1 ? 1 : 0)
+                .accessibilityHidden(true)
+
             Text("KOUM")
                 .font(KoumType.micro)
                 .kerning(3.5)
                 .foregroundStyle(KoumColor.bone.opacity(0.8))
-                .padding(.top, KoumSpacing.xl)
                 .padding(.bottom, KoumSpacing.xl)
                 .opacity(revealed >= 1 ? 1 : 0)
 
@@ -167,7 +199,7 @@ struct PaywallView: View {
         VStack(alignment: .leading, spacing: KoumSpacing.md) {
             valueRow(glyph: .sunrise, text: "An alarm that rings through Silent, every chosen morning")
             valueRow(glyph: .book, text: "Scripture as the only way to turn it off")
-            valueRow(glyph: .check, text: "A verse, a prayer, a line. Your streak of kept mornings")
+            valueRow(glyph: .check, text: "A verse, a prayer, your journal. A streak of kept mornings")
         }
         .padding(KoumSpacing.md + KoumSpacing.xs)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -203,13 +235,15 @@ struct PaywallView: View {
     private var yearlyPrice: String { yearlyPackage?.localizedPriceString ?? "$29.99" }
     private var weeklyPrice: String { weeklyPackage?.localizedPriceString ?? "$3.99" }
 
-    private var monthlyEquivalent: String {
-        guard let yearly = yearlyPackage?.storeProduct.price else { return "$2.50" }
-        let monthly = (yearly as NSDecimalNumber).doubleValue / 12
+    /// The yearly price handed back per week, floored to the cent so it
+    /// always reads at its cheapest honest value.
+    private var weeklyEquivalent: String {
+        guard let yearly = yearlyPackage?.storeProduct.price else { return "$0.57" }
+        let weekly = floor((yearly as NSDecimalNumber).doubleValue / 52 * 100) / 100
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.locale = yearlyPackage?.storeProduct.priceFormatter?.locale ?? .current
-        return formatter.string(from: NSNumber(value: monthly)) ?? "$2.50"
+        return formatter.string(from: NSNumber(value: weekly)) ?? "$0.57"
     }
 
     private var packages: some View {
@@ -234,10 +268,10 @@ struct PaywallView: View {
                             .background(Capsule().fill(KoumColor.firstlight))
                     }
                     HStack(alignment: .firstTextBaseline, spacing: KoumSpacing.xs) {
-                        Text(monthlyEquivalent)
+                        Text(weeklyEquivalent)
                             .font(KoumType.title)
                             .foregroundStyle(KoumColor.bone)
-                        Text("per month")
+                        Text("per week")
                             .font(KoumType.caption)
                             .foregroundStyle(KoumColor.boneMuted)
                     }

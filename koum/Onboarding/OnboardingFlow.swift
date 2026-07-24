@@ -21,7 +21,7 @@ struct OnboardingFlow: View {
         case whyDaily                 // Psalm 5:3 — morning by morning
         case walkthrough              // how Koum works, 4 steps
         case demo
-        case mode, time, days, verseSource, alarmPermission
+        case mode, time, sound, days, verseSource, alarmPermission
         case building
         case summary
         case beforePaywall
@@ -38,6 +38,7 @@ struct OnboardingFlow: View {
     @State private var motivation: String
     @State private var mode: VerifyMode
     @State private var alarmTime: Date
+    @State private var soundName: String
     @State private var repeatDays: Set<Int>
     @State private var verseSource: VerseSource
     @State private var permissionDenied = false
@@ -50,6 +51,7 @@ struct OnboardingFlow: View {
         _blockers = State(initialValue: saved?.blockers ?? [])
         _motivation = State(initialValue: saved?.motivation ?? "")
         _mode = State(initialValue: VerifyMode(rawValue: saved?.modeRaw ?? "") ?? .scan)
+        _soundName = State(initialValue: saved?.soundName ?? AlarmSound.default.id)
         _repeatDays = State(initialValue: saved?.repeatDays ?? [2, 3, 4, 5, 6])
         _verseSource = State(initialValue: saved?.verseSource ?? .koumPlan)
         if let minutes = saved?.alarmMinutes {
@@ -119,7 +121,8 @@ struct OnboardingFlow: View {
         case .walkthrough: 0.52
         case .demo: 0.55
         case .mode: 0.60
-        case .time: 0.65
+        case .time: 0.64
+        case .sound: 0.67
         case .days: 0.70
         case .verseSource: 0.74
         case .alarmPermission: 0.78
@@ -134,7 +137,7 @@ struct OnboardingFlow: View {
     /// Control-dense screens get a deeper scrim so cards stay crisp.
     private var skyDimmed: Bool {
         switch screen {
-        case .howOften, .blockers, .motivation, .mode, .time, .days,
+        case .howOften, .blockers, .motivation, .mode, .time, .sound, .days,
              .verseSource, .alarmPermission, .nameAsk:
             true
         default:
@@ -259,7 +262,11 @@ struct OnboardingFlow: View {
                 .transition(.koumStep)
 
         case .time:
-            TimeScreen(time: $alarmTime) { advance(.days) }
+            TimeScreen(time: $alarmTime) { advance(.sound) }
+                .transition(.koumStep)
+
+        case .sound:
+            SoundScreen(selection: $soundName) { advance(.days) }
                 .transition(.koumStep)
 
         case .days:
@@ -300,13 +307,11 @@ struct OnboardingFlow: View {
             .transition(.koumStep)
 
         case .paywall:
+            // Hard paywall. The X (shown until the one-time offer is spent)
+            // opens the promo inside PaywallView; it never exits the screen.
             PaywallView(onUnlocked: {
                 finishSetup()
                 advance(.confirmation)
-            }, onClose: {
-                // Hard paywall: closing returns to the summary; the app
-                // stays gated but the user is never trapped in a screen.
-                advance(.summary)
             })
             .transition(.koumStep)
 
@@ -373,6 +378,7 @@ struct OnboardingFlow: View {
         progress.blockers = blockers
         progress.motivation = motivation
         progress.modeRaw = mode.rawValue
+        progress.soundName = soundName
         progress.alarmMinutes = (comps.hour ?? 6) * 60 + (comps.minute ?? 30)
         progress.repeatDays = repeatDays
         progress.verseSource = verseSource
@@ -390,7 +396,8 @@ struct OnboardingFlow: View {
             minute: comps.minute ?? 30,
             repeatDays: Array(repeatDays).sorted(),
             mode: mode,
-            verseSource: verseSource
+            verseSource: verseSource,
+            soundName: soundName
         )
         modelContext.insert(alarm)
         try? modelContext.save()

@@ -1,10 +1,10 @@
 import SwiftUI
 
 /// The live alarm demo — the most important screen in the app. The intro
-/// builds the moment like the night before: a quiet clock ticking toward
-/// ring, breath-revealed lines, then the lights go out for two seconds and
-/// the alarm actually fires. The real verification pipeline runs; the only
-/// mercy is a visible "skip" after real struggle.
+/// shows the real alarm screen in miniature (the exact UI about to fire),
+/// names every way out, then the lights go out and the alarm actually rings.
+/// The real verification pipeline runs; the only mercy is a visible "skip"
+/// after real struggle.
 struct DemoAlarmView: View {
     let onComplete: () -> Void
 
@@ -19,7 +19,6 @@ struct DemoAlarmView: View {
 
     // Intro choreography
     @State private var stage = 0
-    @State private var ripple = false
     @State private var countdownLine = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -33,6 +32,15 @@ struct DemoAlarmView: View {
         ].map(Set.init),
         supporting: ["hear", "cause", "soul", "walk", "lift"]
     )
+
+    /// The dark theater before the alarm: storytelling first, one wink, and
+    /// the reminder that there is no way around the Book.
+    private static let countdownLines = [
+        "Close your eyes.",
+        "Okay, keep one open. You'll need it to read.",
+        "It's tomorrow, before sunrise.",
+        "Your snooze button is praying you'll press it. Don't.",
+    ]
 
     var body: some View {
         ZStack {
@@ -69,36 +77,16 @@ struct DemoAlarmView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Spacer()
+                Spacer(minLength: KoumSpacing.lg)
 
-                // The clock, holding its breath. Ripples build the whole time.
-                ZStack {
-                    ForEach(0..<3, id: \.self) { idx in
-                        Circle()
-                            .stroke(KoumColor.firstlight.opacity(0.4), lineWidth: 1)
-                            .frame(width: 130, height: 130)
-                            .scaleEffect(ripple ? 2.0 : 0.85)
-                            .opacity(ripple ? 0 : 0.6)
-                            .animation(
-                                reduceMotion ? nil :
-                                    .easeOut(duration: 2.8)
-                                    .repeatForever(autoreverses: false)
-                                    .delay(Double(idx) * 0.9),
-                                value: ripple
-                            )
-                    }
-                    VStack(spacing: KoumSpacing.xs) {
-                        Text("6:30")
-                            .font(Font.custom("Lora-Regular", size: 64, relativeTo: .largeTitle))
-                            .foregroundStyle(KoumColor.bone)
-                            .monospacedDigit()
-                        MicroLabel(text: "Tomorrow morning", color: KoumColor.boneFaint)
-                    }
-                }
-                .frame(height: 210)
-                .opacity(stage >= 1 ? 1 : 0)
+                // The real alarm screen, in miniature — exactly what is about
+                // to fire, nothing invented for the pitch.
+                MiniAlarmPreview(showsSnoozeLine: false)
+                    .frame(height: 280)
+                    .opacity(stage >= 1 ? 1 : 0)
+                    .offset(y: stage >= 1 ? 0 : 8)
 
-                Spacer()
+                Spacer(minLength: KoumSpacing.md)
 
                 VStack(spacing: KoumSpacing.md) {
                     Text("Let's try it.")
@@ -115,16 +103,17 @@ struct DemoAlarmView: View {
                         .opacity(stage >= 2 ? 1 : 0)
                         .offset(y: stage >= 2 ? 0 : 6)
 
-                    Text("Have a Bible nearby if you can.\nNo Bible? You can type the verse.")
+                    Text("Say the verse out loud, or type it.\nHave your Bible nearby if you want to try the scan.")
                         .font(KoumType.body)
                         .koumLineSpacing(5)
                         .foregroundStyle(KoumColor.boneMuted)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                         .opacity(stage >= 3 ? 1 : 0)
                 }
                 .padding(.horizontal, KoumSpacing.margin)
 
-                Spacer()
+                Spacer(minLength: KoumSpacing.md)
 
                 Button("I'm ready") {
                     KoumHaptics.buttonPress()
@@ -144,7 +133,6 @@ struct DemoAlarmView: View {
             stage = 3
             return
         }
-        ripple = true
         withAnimation(KoumMotion.breathEase) { stage = 1 }
         withAnimation(KoumMotion.breathEase.delay(0.6)) { stage = 2 }
         withAnimation(KoumMotion.breathEase.delay(1.2)) { stage = 3 }
@@ -155,10 +143,15 @@ struct DemoAlarmView: View {
     private var countdown: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            Text(countdownLine == 0 ? "Close your eyes." : "It's tomorrow, before sunrise.")
+            Text(Self.countdownLines[min(countdownLine, Self.countdownLines.count - 1)])
                 .font(KoumType.title)
+                .koumLineSpacing(6)
                 .foregroundStyle(KoumColor.boneMuted)
-                .opacity(countdownLine >= 0 ? 0.9 : 0)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, KoumSpacing.margin)
+                .opacity(0.9)
+                .id(countdownLine)
+                .transition(.opacity)
                 .animation(KoumMotion.breathEase, value: countdownLine)
         }
     }
@@ -180,11 +173,16 @@ struct DemoAlarmView: View {
         demo.onFinished = { onComplete() }
         session = demo
 
-        // A breath of darkness, one line, then the alarm fires for real.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
-            countdownLine = 1
+        // Darkness, four lines of theater, then the alarm fires for real.
+        let lineBeat = 1.5
+        for idx in 1..<Self.countdownLines.count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + lineBeat * Double(idx)) {
+                countdownLine = idx
+            }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.2) {
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + lineBeat * Double(Self.countdownLines.count)
+        ) {
             withAnimation(KoumMotion.gentleEase) { phase = .demo }
         }
     }

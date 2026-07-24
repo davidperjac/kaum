@@ -60,7 +60,15 @@ struct DebugPreviewHost: View {
                 .environment(\.koumTheme, KoumTheme(isDark: true))
                 .preferredColorScheme(.dark)
         case "paywall":
-            PaywallView(onUnlocked: {}, onClose: {})
+            PaywallView(onUnlocked: {})
+        case "promo":
+            PromoOfferView(onUnlocked: {}, onDecline: {})
+        case "prayerkept", "daykept":
+            MorningFlowView(session: held(name == "prayerkept" ? .prayerKept : .journalKept))
+        case "sound":
+            ZStack { SkyBackdrop(progress: 0.67, dimmed: true)
+                SoundScreen(selection: .constant("Dawn")) {} }
+                .preferredColorScheme(.dark)
         case "home", "home-evening", "home-complete":
             HomeView()
                 .environment(\.koumTheme, KoumTheme(isDark: true))

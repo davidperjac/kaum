@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// One prompt, one field. No chrome — a cursor on the night, like writing.
-/// One word is a complete entry. Skippable.
+/// One prompt, one open field. No chrome — a cursor on the night, like
+/// writing. This is the user's place to leave everything: how they feel,
+/// what they're grateful for, what the day holds. One word is a complete
+/// entry; so is a page. Skippable.
 struct JournalView: View {
     @Bindable var session: MorningSession
 
@@ -28,12 +30,21 @@ struct JournalView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.bottom, KoumSpacing.xl)
 
-                TextField("", text: $text, axis: .vertical)
-                    .font(KoumType.devotional)
-                    .foregroundStyle(KoumColor.bone)
-                    .tint(KoumColor.firstlight)
-                    .focused($focused)
-                    .lineLimit(3...8)
+                ZStack(alignment: .topLeading) {
+                    if text.isEmpty {
+                        Text("Say anything. How you feel, what you're grateful for, what today needs. It all belongs here.")
+                            .font(KoumType.devotional)
+                            .koumLineSpacing(8)
+                            .foregroundStyle(KoumColor.boneFaint)
+                            .allowsHitTesting(false)
+                    }
+                    TextField("", text: $text, axis: .vertical)
+                        .font(KoumType.devotional)
+                        .foregroundStyle(KoumColor.bone)
+                        .tint(KoumColor.firstlight)
+                        .focused($focused)
+                        .lineLimit(3...12)
+                }
 
                 Spacer()
 
@@ -62,7 +73,9 @@ enum JournalPrompts {
     static let all = [
         "What stood out to you?",
         "Where do you need this today?",
-        "One line. What is God saying?",
+        "What is God saying to you?",
+        "How are you, honestly?",
+        "What are you grateful for this morning?",
     ]
 
     static func prompt(for verse: VerseRef) -> String {

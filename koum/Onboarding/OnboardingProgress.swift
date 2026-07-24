@@ -10,6 +10,8 @@ nonisolated struct OnboardingProgress: Codable {
     var blockers: Set<String> = []
     var motivation: String = ""
     var modeRaw: String = ""
+    /// Alarm sound id (SoundLibrary); defaults to Dawn.
+    var soundName: String = "Dawn"
     /// Minutes past midnight; nil = never chosen.
     var alarmMinutes: Int?
     var repeatDays: Set<Int> = [2, 3, 4, 5, 6]

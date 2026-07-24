@@ -291,6 +291,82 @@ struct TimeScreen: View {
     }
 }
 
+// MARK: - Alarm sound
+
+/// Pick the sound that does the waking. Tap a row to hear it — choosing an
+/// alarm you've never heard is how snooze wins.
+struct SoundScreen: View {
+    @Binding var selection: String
+    let onContinue: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("How should it\nsound?")
+                .font(KoumType.display)
+                .koumLineSpacing(7)
+                .foregroundStyle(KoumColor.bone)
+                .padding(.top, KoumSpacing.xxl)
+                .padding(.bottom, KoumSpacing.xs)
+
+            Text("Tap one to hear it.")
+                .font(KoumType.caption)
+                .foregroundStyle(KoumColor.boneFaint)
+                .padding(.bottom, KoumSpacing.xl)
+
+            VStack(spacing: KoumSpacing.sm) {
+                ForEach(AlarmSound.all) { sound in
+                    let selected = selection == sound.id
+                    Button {
+                        KoumHaptics.selection()
+                        selection = sound.id
+                        AlarmSoundPlayer.shared.preview(sound: sound)
+                    } label: {
+                        HStack(spacing: KoumSpacing.md) {
+                            Image(systemName: selected ? "speaker.wave.2" : "speaker")
+                                .foregroundStyle(selected ? KoumColor.firstlight : KoumColor.boneFaint)
+                                .frame(width: 26)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(sound.displayName)
+                                    .font(KoumType.label)
+                                    .foregroundStyle(KoumColor.bone)
+                                Text(sound.character)
+                                    .font(KoumType.caption)
+                                    .foregroundStyle(KoumColor.boneMuted)
+                            }
+                            Spacer()
+                            Image(systemName: selected ? "circle.inset.filled" : "circle")
+                                .foregroundStyle(selected ? KoumColor.firstlight : KoumColor.boneFaint)
+                        }
+                        .padding(KoumSpacing.md)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(KoumColor.nightRaised)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .stroke(selected ? KoumColor.firstlight : .clear, lineWidth: 1)
+                                )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                }
+            }
+
+            Spacer()
+
+            Button("Continue") {
+                AlarmSoundPlayer.shared.stop()
+                onContinue()
+            }
+            .buttonStyle(.koumPrimary)
+            .padding(.bottom, KoumSpacing.lg)
+        }
+        .padding(.horizontal, KoumSpacing.margin)
+        .animation(KoumMotion.quickEase, value: selection)
+        .onDisappear { AlarmSoundPlayer.shared.stop() }
+    }
+}
+
 // MARK: - Days
 
 struct DaysScreen: View {
@@ -512,7 +588,7 @@ struct SummaryScreen: View {
         "Open your Bible.",
         "Read one verse.",
         "Pray for a minute.",
-        "Write one line.",
+        "Write what's on your heart.",
     ]
 
     var body: some View {
@@ -590,9 +666,12 @@ struct SummaryScreen: View {
 
             Spacer()
 
+            // Over the bright sunrise band this must read like the paywall
+            // hero: near-white with a night shadow, never faint gray.
             Text("Tomorrow at \(time.formatted(date: .omitted, time: .shortened)). One promise, kept.")
-                .font(KoumType.caption)
-                .foregroundStyle(KoumColor.boneFaint)
+                .font(KoumType.smallLabel)
+                .foregroundStyle(KoumColor.bone.opacity(0.92))
+                .shadow(color: KoumColor.night.opacity(0.7), radius: 8, y: 1)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, KoumSpacing.sm)
                 .opacity(stage >= 4 ? 1 : 0)

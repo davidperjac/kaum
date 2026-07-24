@@ -53,42 +53,67 @@ struct PrayerLogView: View {
     }
 
     private func prayerCard(_ prayer: PrayerEntry) -> some View {
+        PrayerCardView(
+            text: prayer.text,
+            date: prayer.date,
+            verseRef: prayer.verseRef,
+            answered: prayer.answered,
+            answeredDate: prayer.answeredDate
+        ) {
+            KoumHaptics.selection()
+            prayer.answered = true
+            prayer.answeredDate = Date()
+            try? modelContext.save()
+        }
+    }
+}
+
+/// One prayer, notebook-styled — the card the log is made of. Shared with the
+/// onboarding demo so what new users are shown is exactly what they keep.
+struct PrayerCardView: View {
+    let text: String
+    let date: Date
+    var verseRef: VerseRef?
+    var answered: Bool = false
+    var answeredDate: Date?
+    /// nil hides the action (read-only contexts like the demo preview).
+    var onMarkAnswered: (() -> Void)?
+
+    @Environment(\.koumTheme) private var theme
+
+    var body: some View {
         VStack(alignment: .leading, spacing: KoumSpacing.sm) {
             HStack {
-                Text(prayer.date.formatted(date: .abbreviated, time: .omitted))
+                Text(date.formatted(date: .abbreviated, time: .omitted))
                     .font(KoumType.micro)
                     .foregroundStyle(theme.textFaint)
-                if let ref = prayer.verseRef {
+                if let ref = verseRef {
                     Text("· \(ref.display)")
                         .font(KoumType.micro)
                         .foregroundStyle(theme.textFaint)
                 }
                 Spacer()
-                if prayer.answered {
+                if answered {
                     Label("Answered", systemImage: "checkmark")
                         .font(KoumType.micro)
                         .foregroundStyle(theme.success)
                 }
             }
 
-            Text(prayer.text)
+            Text(text)
                 .font(KoumType.devotional)
                 .koumLineSpacing(8)
                 .foregroundStyle(theme.text)
+                .fixedSize(horizontal: false, vertical: true)
 
-            if prayer.answered, let date = prayer.answeredDate {
-                Text("Answered \(date.formatted(date: .abbreviated, time: .omitted))")
+            if answered, let answeredDate {
+                Text("Answered \(answeredDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(KoumType.caption)
                     .foregroundStyle(theme.success)
-            } else {
-                Button("Mark answered") {
-                    KoumHaptics.selection()
-                    prayer.answered = true
-                    prayer.answeredDate = Date()
-                    try? modelContext.save()
-                }
-                .buttonStyle(.koumGhost)
-                .padding(.leading, -16)
+            } else if let onMarkAnswered {
+                Button("Mark answered", action: onMarkAnswered)
+                    .buttonStyle(.koumGhost)
+                    .padding(.leading, -16)
             }
         }
         .padding(KoumSpacing.md + KoumSpacing.xs)

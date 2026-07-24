@@ -13,8 +13,10 @@ final class MorningSession {
         case verifying          // camera / mic / keyboard active
         case verified           // bloom + check
         case prayer
+        case prayerKept         // demo only: their prayer, in the real log card
         case devotional
         case journal
+        case journalKept        // demo only: day 1, on the page
         case complete
     }
 
@@ -30,6 +32,11 @@ final class MorningSession {
     private(set) var snoozesUsed = 0
     private(set) var startedAt = Date()
     private(set) var milestoneHit: Int?
+
+    /// What the user wrote this morning — the demo's "kept" screens hand
+    /// these back in the real log components.
+    private(set) var lastPrayerText = ""
+    private(set) var lastJournalText = ""
 
     var verification: VerificationSession?
 
@@ -121,8 +128,11 @@ final class MorningSession {
         modelContext = context
     }
 
+    /// Recorded for demo mornings too: the user genuinely verified the verse,
+    /// so the demo becomes their real Day 1 (entry + streak). Same-day
+    /// repeats are absorbed by StreakService.
     private func recordVerification(usedEscapeHatch: Bool) {
-        guard !isDemo, let context = modelContext else { return }
+        guard let context = modelContext else { return }
         let today = Calendar.current.startOfDay(for: Date())
         let entry: DailyEntry
         if let existing = try? context.fetch(FetchDescriptor<DailyEntry>(
@@ -144,30 +154,35 @@ final class MorningSession {
     // MARK: - Progression
 
     func advanceFromVerified() {
-        // The demo proves the mechanic and stops; the full flow is for real
-        // mornings.
-        step = isDemo ? .complete : .prayer
+        // The demo walks the whole morning — prayer, devotional, journal —
+        // so the aha moment is the full experience, not just the alarm.
+        step = .prayer
     }
 
     func savePrayer(_ text: String) {
-        defer { step = .devotional }
-        guard !isDemo, let context = modelContext,
-              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        context.insert(PrayerEntry(text: text, verse: verse))
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        lastPrayerText = trimmed
+        // Demo prayers are real prayers: they open the user's actual log.
+        defer { step = (isDemo && !trimmed.isEmpty) ? .prayerKept : .devotional }
+        guard let context = modelContext, !trimmed.isEmpty else { return }
+        context.insert(PrayerEntry(text: trimmed, verse: verse))
         try? context.save()
     }
 
     func skipPrayer() { step = .devotional }
 
+    func advanceFromPrayerKept() { step = .devotional }
+
     func advanceFromDevotional() { step = .journal }
 
     func saveJournal(_ text: String, prompt: String) {
-        defer { step = .complete }
-        guard !isDemo, let context = modelContext else { return }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        lastJournalText = trimmed
+        defer { step = demoJournalNextStep }
+        guard let context = modelContext else { return }
         let today = Calendar.current.startOfDay(for: Date())
         guard let entry = try? context.fetch(FetchDescriptor<DailyEntry>(
             predicate: #Predicate { $0.date == today })).first else { return }
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
             entry.journalText = trimmed
             entry.journalPrompt = prompt
@@ -175,7 +190,18 @@ final class MorningSession {
         try? context.save()
     }
 
-    func skipJournal() { step = .complete }
+    func skipJournal() { step = demoJournalNextStep }
+
+    func advanceFromJournalKept() { step = .complete }
+
+    /// After the journal, the demo shows the day on the page — as long as
+    /// the user wrote anything at all this morning.
+    private var demoJournalNextStep: Step {
+        guard isDemo, !(lastJournalText.isEmpty && lastPrayerText.isEmpty) else {
+            return .complete
+        }
+        return .journalKept
+    }
 
     func finish() {
         onFinished?()

@@ -26,11 +26,17 @@ struct MorningFlowView: View {
             case .prayer:
                 PrayerView(session: session)
                     .transition(.koumStep)
+            case .prayerKept:
+                PrayerKeptView(session: session)
+                    .transition(.koumStep)
             case .devotional:
                 DevotionalView(session: session)
                     .transition(.koumStep)
             case .journal:
                 JournalView(session: session)
+                    .transition(.koumStep)
+            case .journalKept:
+                DayKeptView(session: session)
                     .transition(.koumStep)
             case .complete:
                 if session.isDemo {
@@ -69,9 +75,11 @@ struct MorningFlowView: View {
         case .verifying: 1
         case .verified: 2
         case .prayer: 3
-        case .devotional: 4
-        case .journal: 5
-        case .complete: 6
+        case .prayerKept: 4
+        case .devotional: 5
+        case .journal: 6
+        case .journalKept: 7
+        case .complete: 8
         }
     }
 }

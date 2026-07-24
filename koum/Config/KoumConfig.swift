@@ -18,6 +18,11 @@ enum KoumConfig {
     static let yearlyProductID = "dptech.koum.yearly"
     static let weeklyProductID = "dptech.koum.weekly"
 
+    /// The one-time exit offer (discounted first year). Not yet created in
+    /// App Store Connect / RevenueCat; the promo screen shows fallback copy
+    /// until this product exists in an offering.
+    static let promoYearlyProductID = "dptech.koum.yearly.promo"
+
     // MARK: - Verification escalation (Gemini Flash)
 
     /// Google Generative Language API key. Empty string disables LLM
